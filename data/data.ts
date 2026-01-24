@@ -11,8 +11,29 @@ import {
   Braces,
   Layers,
   Zap,
+  Github,
+  Linkedin,
+  Mail,
+  Cloud,
+  Brain,
+  Eye,
+  TestTube,
   LucideIcon,
 } from "lucide-react";
+
+export interface SocialLink {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+export interface Hero {
+  name: string;
+  location: string;
+  position: string;
+  description: string;
+  socialLinks: SocialLink[];
+}
 
 export interface Skill {
   name: string;
@@ -36,79 +57,144 @@ export interface Project {
   featured?: boolean;
 }
 
+export const hero: Hero = {
+  name: "Preet Patel",
+  location: "Toronto, Ontario",
+  position: "Software Developer @ FGF Brands",
+  description:
+    "i love building things and solving problems. since starting CS in 2022, i've been diving deep into everything from web development to algorithms, always chasing that feeling when code finally clicks into place. when i'm not trying to vibe-code my life. i'm probably watching movies or obsessing over mechanical keyboards.",
+  socialLinks: [
+    {
+      name: "GITHUB",
+      href: "https://github.com/PrEEtPatEl44",
+      icon: Github,
+    },
+    {
+      name: "LINKEDIN",
+      href: "https://www.linkedin.com/in/preet-patel44/",
+      icon: Linkedin,
+    },
+    {
+      name: "EMAIL",
+      href: "mailto:preetp4404@gmail.com",
+      icon: Mail,
+    },
+  ],
+};
+
 export const skills: Skill[] = [
   { name: "React", icon: Code2 },
   { name: "TypeScript", icon: FileCode },
-  { name: "Tailwind CSS", icon: Palette },
   { name: "Next.js", icon: Globe },
   { name: "Node.js", icon: Server },
   { name: "Express", icon: Zap },
+  { name: "Python", icon: Braces },
+  { name: "C# / .NET", icon: Layers },
   { name: "PostgreSQL", icon: Database },
-  { name: "Prisma", icon: Layers },
-  { name: "Git", icon: GitBranch },
+  { name: "SQL Server", icon: Database },
+  { name: "Azure", icon: Cloud },
+  { name: "AWS", icon: Cloud },
   { name: "Docker", icon: Container },
-  { name: "VS Code", icon: Braces },
+  { name: "Git", icon: GitBranch },
+  { name: "TensorFlow", icon: Brain },
+  { name: "OpenCV", icon: Eye },
+  { name: "Jest", icon: TestTube },
+  { name: "Tailwind CSS", icon: Palette },
   { name: "Figma", icon: Figma },
 ];
 
 export const workExperience: WorkExperience[] = [
   {
     company: "FGF Brands",
-    role: "Software Developer",
-    period: "2023 - Present",
+    role: "Software Developer Intern",
+    period: "Sept. 2024 - May. 2025, Jan. 2026 - Present",
     description:
       "Building internal tools and web applications to streamline manufacturing processes and improve operational efficiency.",
-    tags: ["React", "TypeScript", "Node.js", "PostgreSQL"],
+    tags: [
+      ".NET",
+      "C#",
+      "TypeScript",
+      "Node.js",
+      "PostgreSQL",
+      "SQL Server",
+      "Azure",
+      "Python",
+    ],
     link: "https://fgfbrands.com",
   },
-  {
-    company: "Tech Startup",
-    role: "Junior Developer",
-    period: "2022 - 2023",
-    description:
-      "Developed and maintained client-facing web applications using modern frontend frameworks.",
-    tags: ["React", "JavaScript", "Tailwind CSS"],
-    link: "#",
-  },
-  {
-    company: "Freelance",
-    role: "Web Developer",
-    period: "2021 - 2022",
-    description:
-      "Built custom websites and web applications for small businesses and startups.",
-    tags: ["HTML", "CSS", "JavaScript", "WordPress"],
-    link: "#",
-  },
+  // {
+  //   company: "Tech Startup",
+  //   role: "Junior Developer",
+  //   period: "2022 - 2023",
+  //   description:
+  //     "Developed and maintained client-facing web applications using modern frontend frameworks.",
+  //   tags: ["React", "JavaScript", "Tailwind CSS"],
+  //   link: "#",
+  // },
+  // {
+  //   company: "Freelance",
+  //   role: "Web Developer",
+  //   period: "2021 - 2022",
+  //   description:
+  //     "Built custom websites and web applications for small businesses and startups.",
+  //   tags: ["HTML", "CSS", "JavaScript", "WordPress"],
+  //   link: "#",
+  // },
 ];
 
 export const projects: Project[] = [
   {
-    title: "E-Commerce Dashboard",
+    title: "Prepify",
     description:
-      "A minimal dashboard for tracking sales and inventory with real-time updates.",
-    tags: ["React", "TypeScript", "Tailwind"],
+      "An AI Based Job Search helper which helps users through every step of the job search journey.",
+    tags: [
+      "React",
+      "TypeScript",
+      "OpenAI API",
+      "LangChain",
+      "Supabase",
+      "PostgreSQL",
+    ],
+    link: "https://github.com/PrEEtPatEl44/prepify",
+  },
+  {
+    title: "Fragments",
+    description:
+      "A lightweight Node.js/Express-based backend REST API for managing fragments of data hosted on AWS S3.",
+    tags: [
+      "NNext.js",
+      "Node.js",
+      "Express",
+      "TypeScript",
+      "Jest",
+      "Hurl",
+      "Docker",
+      "AWS",
+      "S3",
+      "EC2",
+    ],
     link: "#",
+  },
+  {
+    title: "Self-Driving Car CNN",
+    description:
+      "A self-driving car simulation using deep learning. . It covers the full workflow from data preprocessing and image augmentation to training a convolutional neural network to predict steering angles from camera images.",
+    tags: ["Python", "TensorFlow", "Keras", "OpenCV"],
+    link: "https://github.com/PrEEtPatEl44/CarSimProject",
     featured: true,
   },
   {
-    title: "Task Manager API",
+    title: "DevOps Companion",
     description:
-      "RESTful API for a collaborative task management tool with authentication.",
-    tags: ["Node.js", "Express", "PostgreSQL"],
-    link: "#",
-  },
-  {
-    title: "Portfolio V1",
-    description:
-      "First iteration of my personal portfolio using vanilla JavaScript and CSS.",
-    tags: ["HTML", "CSS", "JavaScript"],
-    link: "#",
-  },
-  {
-    title: "Weather App",
-    description:
-      "Location-based weather application utilizing external weather APIs.",
-    tags: ["React", "OpenWeatherAPI"],
+      "An AI powered bot that assists project managers for their daily workflows That won FGF Case Competition 2024.",
+    tags: [
+      "PostgreSQL",
+      "OpenAI API",
+      "Python",
+      "TypeScript",
+      "React",
+      "Azure DevOps",
+    ],
     link: "#",
   },
 ];

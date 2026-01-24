@@ -1,7 +1,4 @@
 import {
-  Github,
-  Linkedin,
-  Mail,
   ArrowUpRight,
   Terminal,
   Cpu,
@@ -12,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TextFlip } from "@/components/ui/text-flip";
-import { skills, workExperience, projects } from "@/data/data";
+import { hero, skills, workExperience, projects } from "@/data/data";
 
 export default function Home() {
   return (
@@ -25,7 +22,7 @@ export default function Home() {
         <section>
           {/* Name */}
           <h1 className="mb-6 font-[family-name:var(--font-space-mono)] text-3xl font-bold uppercase tracking-tight sm:text-4xl md:text-5xl">
-            <span className="text-outline">preet patel</span>
+            <span className="text-outline">{hero.name}</span>
             <span className="text-white">.</span>
           </h1>
 
@@ -34,65 +31,49 @@ export default function Home() {
             <div className="flex items-center gap-2 text-zinc-400">
               <MapPin className="h-4 w-4 text-brand" />
               <span className="font-[family-name:var(--font-space-mono)] text-sm">
-                Toronto, Ontario
+                {hero.location}
               </span>
             </div>
             <div className="flex items-center gap-2 text-zinc-400">
               <Building2 className="h-4 w-4 text-brand" />
               <span className="font-[family-name:var(--font-space-mono)] text-sm">
-                Software Developer @ FGF Brands
+                {hero.position}
               </span>
             </div>
           </div>
 
           {/* Description */}
-          <p className="mb-6 max-w-2xl font-[family-name:var(--font-space-mono)] text-sm leading-relaxed text-zinc-400 sm:text-xl">
-            I build accessible, pixel-perfect, performant web experiences.
-            Currently focused on <span className="text-brand">React</span> and
-            modern frontend ecosystems.
+          <p className="mb-6 font-[family-name:var(--font-space-mono)] text-sm text-zinc-400 sm:text-xl">
+            {hero.description}
           </p>
 
           {/* Social links */}
           <div className="flex items-center gap-6">
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-400 transition-colors hover:text-brand"
-            >
-              <TextFlip className="items-center gap-2">
-                <Github className="h-4 w-4" />
-                <span className="font-[family-name:var(--font-space-mono)] text-xs tracking-wider">
-                  GITHUB
-                </span>
-              </TextFlip>
-            </a>
-
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-400 transition-colors hover:text-brand"
-            >
-              <TextFlip className="items-center gap-2">
-                <Linkedin className="h-4 w-4" />
-                <span className="font-[family-name:var(--font-space-mono)] text-xs tracking-wider">
-                  LINKEDIN
-                </span>
-              </TextFlip>
-            </a>
-
-            <a
-              href="mailto:hello@example.com"
-              className="text-zinc-400 transition-colors hover:text-brand"
-            >
-              <TextFlip className="items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span className="font-[family-name:var(--font-space-mono)] text-xs tracking-wider">
-                  EMAIL
-                </span>
-              </TextFlip>
-            </a>
+            {hero.socialLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  target={
+                    link.href.startsWith("mailto:") ? undefined : "_blank"
+                  }
+                  rel={
+                    link.href.startsWith("mailto:")
+                      ? undefined
+                      : "noopener noreferrer"
+                  }
+                  className="text-zinc-400 transition-colors hover:text-brand"
+                >
+                  <TextFlip className="items-center gap-2">
+                    <Icon className="h-4 w-4" />
+                    <span className="font-[family-name:var(--font-space-mono)] text-xs tracking-wider">
+                      {link.name}
+                    </span>
+                  </TextFlip>
+                </a>
+              );
+            })}
           </div>
         </section>
 
@@ -108,7 +89,7 @@ export default function Home() {
 
           {/* Work experience list */}
           <div className="space-y-8">
-            {workExperience.map((job, index) => (
+            {workExperience.map((job) => (
               <div key={job.company} className="group">
                 {/* Company and period row */}
                 <div className="mb-2 flex items-start justify-between">
