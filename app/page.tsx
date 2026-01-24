@@ -227,7 +227,7 @@ export default function Home() {
               className="bg-brand font-[family-name:var(--font-space-mono)] text-white hover:bg-brand/90"
               asChild
             >
-              <a href="mailto:hello@example.com">
+              <a href={hero.socialLinks[2].href}>
                 <TextFlip>Get in Touch</TextFlip>
               </a>
             </Button>
