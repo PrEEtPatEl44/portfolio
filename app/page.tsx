@@ -17,7 +17,7 @@ import { AccentPicker } from "@/components/ui/accent-picker";
 
 export default function Home() {
   return (
-    <div className="bg-grid-pattern min-h-screen">
+    <div className="bg-grid-pattern crt min-h-screen">
       {/* Top accent line - sticky */}
       <div className="sticky top-0 z-50 h-1 w-full bg-brand" />
       <AccentPicker />

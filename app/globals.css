@@ -164,4 +164,34 @@
   .animate-accent-pulse {
     animation: accent-pulse 0.8s ease-out forwards;
   }
+
+  /* CRT old television effect */
+  .crt::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px
+    );
+  }
+
+  @keyframes crt-flicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.97; }
+    94% { opacity: 1; }
+    96% { opacity: 0.98; }
+    97% { opacity: 1; }
+  }
+
+  .crt {
+    animation: crt-flicker 4s infinite;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
+  }
 }
