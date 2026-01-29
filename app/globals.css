@@ -154,4 +154,14 @@
   .animate-blink {
     animation: blink 1s step-end infinite;
   }
+
+  @keyframes accent-pulse {
+    0% { box-shadow: 0 0 0 0 currentColor; opacity: 0.6; }
+    50% { box-shadow: 0 0 6px 2px currentColor; opacity: 1; }
+    100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  }
+
+  .animate-accent-pulse {
+    animation: accent-pulse 0.8s ease-out forwards;
+  }
 }

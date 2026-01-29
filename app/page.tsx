@@ -13,12 +13,14 @@ import { TextFlip } from "@/components/ui/text-flip";
 import { TextScramble } from "@/components/ui/text-scramble";
 import { FadeIn } from "@/components/ui/fade-in";
 import { hero, skills, workExperience, projects, education } from "@/data/data";
+import { AccentPicker } from "@/components/ui/accent-picker";
 
 export default function Home() {
   return (
     <div className="bg-grid-pattern min-h-screen">
       {/* Top accent line - sticky */}
       <div className="sticky top-0 z-50 h-1 w-full bg-brand" />
+      <AccentPicker />
 
       <main className="mx-auto max-w-5xl space-y-24 px-8 py-20 sm:px-16">
         {/* Hero Section */}
