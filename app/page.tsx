@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TextFlip } from "@/components/ui/text-flip";
+import { TextScramble } from "@/components/ui/text-scramble";
 import { FadeIn } from "@/components/ui/fade-in";
 import { hero, skills, workExperience, projects, education } from "@/data/data";
 
@@ -25,7 +26,7 @@ export default function Home() {
         <section>
           {/* Name */}
           <h1 className="mb-6 font-[family-name:var(--font-space-mono)] text-3xl font-bold uppercase tracking-tight sm:text-4xl md:text-5xl">
-            <span className="text-outline">{hero.name}</span>
+            <TextScramble text={hero.name} className="text-outline" />
             <span className="text-white">.</span>
           </h1>
 
