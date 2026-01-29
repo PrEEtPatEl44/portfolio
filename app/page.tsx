@@ -5,11 +5,13 @@ import {
   MapPin,
   Building2,
   Briefcase,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TextFlip } from "@/components/ui/text-flip";
-import { hero, skills, workExperience, projects } from "@/data/data";
+import { FadeIn } from "@/components/ui/fade-in";
+import { hero, skills, workExperience, projects, education } from "@/data/data";
 
 export default function Home() {
   return (
@@ -19,6 +21,7 @@ export default function Home() {
 
       <main className="mx-auto max-w-5xl space-y-24 px-8 py-20 sm:px-16">
         {/* Hero Section */}
+        <FadeIn>
         <section>
           {/* Name */}
           <h1 className="mb-6 font-[family-name:var(--font-space-mono)] text-3xl font-bold uppercase tracking-tight sm:text-4xl md:text-5xl">
@@ -76,8 +79,10 @@ export default function Home() {
             })}
           </div>
         </section>
+        </FadeIn>
 
         {/* Work Section */}
+        <FadeIn>
         <section>
           {/* Section header */}
           <div className="mb-10 flex items-center gap-3">
@@ -133,8 +138,54 @@ export default function Home() {
             ))}
           </div>
         </section>
+        </FadeIn>
+
+        {/* Education Section */}
+        <FadeIn>
+        <section>
+          <div className="mb-10 flex items-center gap-3">
+            <GraduationCap className="h-5 w-5 text-brand" />
+            <h2 className="font-[family-name:var(--font-space-mono)] text-xl tracking-wider text-brand">
+              EDUCATION
+            </h2>
+          </div>
+
+          <div className="space-y-8">
+            {education.map((edu) => (
+              <div key={edu.school} className="group">
+                <div className="mb-2 flex items-start justify-between">
+                  <div>
+                    <h3 className="font-[family-name:var(--font-space-mono)] text-lg font-medium text-white">
+                      {edu.program}
+                    </h3>
+                    {edu.link ? (
+                      <a
+                        href={edu.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group/link inline-flex items-center gap-1 font-[family-name:var(--font-space-mono)] text-sm text-brand transition-colors hover:text-brand/80"
+                      >
+                        <TextFlip>{edu.school}</TextFlip>
+                        <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
+                      </a>
+                    ) : (
+                      <span className="font-[family-name:var(--font-space-mono)] text-sm text-brand">
+                        {edu.school}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-[family-name:var(--font-space-mono)] text-sm text-zinc-500">
+                    {edu.period}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+        </FadeIn>
 
         {/* Projects Section */}
+        <FadeIn>
         <section>
           {/* Section header */}
           <div className="mb-10 flex items-center gap-3">
@@ -185,8 +236,10 @@ export default function Home() {
             ))}
           </div>
         </section>
+        </FadeIn>
 
         {/* Skills Section */}
+        <FadeIn>
         <section>
           {/* Section header */}
           <div className="mb-10 flex items-center gap-3">
@@ -213,8 +266,10 @@ export default function Home() {
             })}
           </div>
         </section>
+        </FadeIn>
 
         {/* CTA Section */}
+        <FadeIn>
         <section>
           <div className="flex flex-col items-center justify-center rounded border border-zinc-800 px-8 py-12 text-center">
             <h2 className="mb-3 font-[family-name:var(--font-space-mono)] text-2xl font-bold text-white sm:text-3xl">
@@ -233,6 +288,7 @@ export default function Home() {
             </Button>
           </div>
         </section>
+        </FadeIn>
       </main>
     </div>
   );

@@ -49,6 +49,13 @@ export interface WorkExperience {
   link: string;
 }
 
+export interface Education {
+  school: string;
+  program: string;
+  period: string;
+  link?: string;
+}
+
 export interface Project {
   title: string;
   description: string;
@@ -101,6 +108,15 @@ export const skills: Skill[] = [
   { name: "Jest", icon: TestTube },
   { name: "Tailwind CSS", icon: Palette },
   { name: "Figma", icon: Figma },
+];
+
+export const education: Education[] = [
+  {
+    school: "Seneca Polytechnic",
+    program: "Computer Programming and Analysis, Advanced Diploma",
+    period: "May 2023 - Dec. 2025",
+    link: "https://www.senecapolytechnic.ca",
+  },
 ];
 
 export const workExperience: WorkExperience[] = [
@@ -162,7 +178,7 @@ export const projects: Project[] = [
     description:
       "A lightweight Node.js/Express-based backend REST API for managing fragments of data hosted on AWS S3.",
     tags: [
-      "NNext.js",
+      "Next.js",
       "Node.js",
       "Express",
       "TypeScript",
@@ -178,7 +194,7 @@ export const projects: Project[] = [
   {
     title: "Self-Driving Car CNN",
     description:
-      "A self-driving car simulation using deep learning. . It covers the full workflow from data preprocessing and image augmentation to training a convolutional neural network to predict steering angles from camera images.",
+      "A self-driving car simulation using deep learning. It covers the full workflow from data preprocessing and image augmentation to training a convolutional neural network to predict steering angles from camera images.",
     tags: ["Python", "TensorFlow", "Keras", "OpenCV"],
     link: "https://github.com/PrEEtPatEl44/CarSimProject",
     featured: true,
