@@ -277,7 +277,7 @@ export default function Home() {
         {/* CTA Section */}
         <FadeIn>
         <section>
-          <div className="flex flex-col items-center justify-center rounded border border-zinc-800 px-8 py-12 text-center">
+          <div className="flex flex-col items-center justify-center px-8 py-12 text-center">
             <h2 className="mb-3 font-[family-name:var(--font-space-mono)] text-2xl font-bold text-white sm:text-3xl">
               Let&apos;s work together.
             </h2>
