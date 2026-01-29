@@ -26,8 +26,11 @@ export default function Home() {
         <section>
           {/* Name */}
           <h1 className="mb-6 font-[family-name:var(--font-space-mono)] text-3xl font-bold uppercase tracking-tight sm:text-4xl md:text-5xl">
+            <span className="text-white">&gt; </span>
+            <span className="text-white">HELLO, I&apos;M</span>
+            <br />
             <TextScramble text={hero.name} className="text-outline" />
-            <span className="text-white">.</span>
+            <span className="inline-block w-[0.6em] h-[1.1em] bg-brand align-middle ml-1 animate-blink" />
           </h1>
 
           {/* Location & Position */}
