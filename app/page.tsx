@@ -6,6 +6,7 @@ import {
   Building2,
   Briefcase,
   GraduationCap,
+  Github,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { TextScramble } from "@/components/ui/text-scramble";
 import { FadeIn } from "@/components/ui/fade-in";
 import { hero, skills, workExperience, projects, education } from "@/data/data";
 import { AccentPicker } from "@/components/ui/accent-picker";
+import { GitHubActivity } from "@/components/ui/github-activity";
 
 export default function Home() {
   return (
@@ -256,7 +258,7 @@ export default function Home() {
           </div>
 
           {/* Skills badges */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             {skills.map((skill) => {
               const Icon = skill.icon;
               return (
@@ -270,6 +272,21 @@ export default function Home() {
                 </Badge>
               );
             })}
+          </div>
+        </section>
+        </FadeIn>
+
+        {/* Activity Section */}
+        <FadeIn>
+        <section>
+          <div className="mb-10 flex items-center gap-3">
+            <Github className="h-5 w-5 text-brand" />
+            <h2 className="font-[family-name:var(--font-space-mono)] text-xl tracking-wider text-brand">
+              ACTIVITY
+            </h2>
+          </div>
+          <div className="flex justify-center">
+            <GitHubActivity />
           </div>
         </section>
         </FadeIn>
