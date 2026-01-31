@@ -65,7 +65,7 @@ export interface Project {
 }
 
 export const hero: Hero = {
-  name: "Preet Patel",
+  name: "PREET PATEL",
   location: "Toronto, Ontario",
   position: "Software Developer @ FGF Brands",
   description:

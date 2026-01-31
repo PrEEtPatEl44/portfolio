@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TextFlip } from "@/components/ui/text-flip";
-import { TextScramble } from "@/components/ui/text-scramble";
+import { GlitchText } from "@/components/ui/glitch-text";
 import { FadeIn } from "@/components/ui/fade-in";
 import { hero, skills, workExperience, projects, education } from "@/data/data";
 import { AccentPicker } from "@/components/ui/accent-picker";
@@ -33,7 +33,7 @@ export default function Home() {
             <span className="text-white">&gt; </span>
             <span className="text-white">HELLO, I&apos;M</span>
             <br />
-            <TextScramble text={hero.name} className="text-outline" />
+            <GlitchText text={hero.name} className="text-outline" />
             <span className="inline-block w-[0.6em] h-[1.1em] bg-brand align-middle ml-1 animate-blink" />
           </h1>
 
