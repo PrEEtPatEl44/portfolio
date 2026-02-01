@@ -69,7 +69,7 @@ export const hero: Hero = {
   location: "Toronto, Ontario",
   position: "Software Developer @ FGF Brands",
   description:
-    "i love building things and solving problems. since starting CS in 2022, i've been diving deep into everything from web development to algorithms, always chasing that feeling when code finally clicks into place. when i'm not trying to vibe-code my life. i'm probably watching movies or obsessing over mechanical keyboards.",
+    "I love building things and solving problems. Since starting CS in 2022, I’ve been constantly experimenting and learning by doing. These days, I’m focused on discovering and running local AI models, tweaking setups, and understanding the tradeoffs between performance, memory, and hardware. When I’m not doing that, I’m probably watching movies or working on side projects.",
   socialLinks: [
     {
       name: "GITHUB",
