@@ -13,7 +13,7 @@ import {
   Zap,
   Github,
   Linkedin,
-  Mail,
+  Twitter,
   Cloud,
   Brain,
   Eye,
@@ -82,9 +82,9 @@ export const hero: Hero = {
       icon: Linkedin,
     },
     {
-      name: "EMAIL",
-      href: "mailto:preetp4404@gmail.com",
-      icon: Mail,
+      name: "X",
+      href: "https://x.com/prabornn",
+      icon: Twitter,
     },
   ],
 };
