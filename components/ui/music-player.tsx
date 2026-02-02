@@ -88,7 +88,7 @@ export function MusicPlayer() {
           </button>
         </DialogTrigger>
 
-        <DialogContent className="rounded-none border border-neutral-800 bg-black p-0 font-[family-name:var(--font-space-mono)] sm:max-w-sm [&>button]:text-neutral-500 [&>button]:hover:text-brand">
+        <DialogContent className="origin-top-right rounded-none border border-neutral-800 bg-black p-0 font-[family-name:var(--font-space-mono)] sm:max-w-sm data-[state=open]:slide-in-from-top-8 data-[state=open]:slide-in-from-right-8 data-[state=closed]:slide-out-to-top-8 data-[state=closed]:slide-out-to-right-8 [&>button]:text-neutral-500 [&>button]:hover:text-brand">
           <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle className="text-sm tracking-[0.2em] text-brand">
               SELECT FREQUENCY
