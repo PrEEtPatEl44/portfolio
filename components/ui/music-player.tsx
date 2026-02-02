@@ -95,23 +95,23 @@ export function MusicPlayer() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex flex-col gap-0 px-4 pb-4">
+          <div className="flex flex-col gap-2 px-4 pb-4">
             {tracks.map((track, i) => (
               <button
                 key={track.name}
                 onClick={() => handlePlay(i)}
-                className={`flex items-center justify-between px-4 py-4 text-left transition-colors
+                className={`group flex items-center justify-between px-4 py-4 text-left transition-colors
                   ${
                     playing === i
                       ? "border border-brand bg-brand/5 text-white"
-                      : "border border-transparent text-neutral-400 hover:bg-neutral-900 hover:text-white"
+                      : "border border-transparent text-neutral-400  hover:border-brand "
                   }`}
               >
                 <span className="text-sm tracking-wider">{track.name}</span>
                 {playing === i ? (
-                  <Pause className="h-4 w-4 text-brand" />
+                  <Pause className="h-4 w-4 text-brand group-hover:text-brand" />
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <Play className="h-4 w-4 group-hover:text-brand" />
                 )}
               </button>
             ))}
