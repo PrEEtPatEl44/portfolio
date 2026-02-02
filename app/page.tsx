@@ -15,6 +15,7 @@ import { GlitchText } from "@/components/ui/glitch-text";
 import { FadeIn } from "@/components/ui/fade-in";
 import { hero, skills, workExperience, projects, education } from "@/data/data";
 import { AccentPicker } from "@/components/ui/accent-picker";
+import { MusicPlayer } from "@/components/ui/music-player";
 import { GitHubActivity } from "@/components/ui/github-activity";
 
 export default function Home() {
@@ -23,6 +24,7 @@ export default function Home() {
       {/* Top accent line - sticky */}
       <div className="sticky top-0 z-50 h-1 w-full bg-brand" />
       <AccentPicker />
+      <MusicPlayer />
 
       <main className="mx-auto max-w-5xl space-y-24 px-8 py-20 sm:px-16">
         {/* Hero Section */}
