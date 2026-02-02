@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Music, Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { Music, Volume2, VolumeX, Play, Pause, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,19 @@ export function MusicPlayer() {
   const [playing, setPlaying] = useState<number | null>(null);
   const [muted, setMuted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowTooltip(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!showTooltip) return;
+    const dismiss = setTimeout(() => setShowTooltip(false), 10000);
+    return () => clearTimeout(dismiss);
+  }, [showTooltip]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -70,6 +82,33 @@ export function MusicPlayer() {
           <Volume2 className="h-4 w-4 text-neutral-500 transition-colors group-hover:text-brand" />
         )}
       </button>
+
+      {/* Tooltip popup */}
+      {showTooltip && (
+        <button
+          onClick={() => {
+            setShowTooltip(false);
+            setOpen(true);
+          }}
+          className="absolute top-14 right-0 animate-in fade-in slide-in-from-top-2 duration-300 cursor-pointer"
+        >
+          <div className="relative flex items-center gap-2 border-2 border-brand bg-brand px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs tracking-widest text-black font-bold whitespace-nowrap">
+            [ SYSTEM: PLAY CALMING AUDIO? ]
+            <span
+              role="button"
+              aria-label="Dismiss"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowTooltip(false);
+              }}
+              className="inline-flex items-center justify-center hover:opacity-70"
+            >
+              <X className="h-3.5 w-3.5" />
+            </span>
+            <div className="absolute -top-[6px] right-4 h-0 w-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-brand" />
+          </div>
+        </button>
+      )}
 
       {/* Music button */}
       <Dialog open={open} onOpenChange={setOpen}>
