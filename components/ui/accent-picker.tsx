@@ -1,16 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Palette } from "lucide-react";
 const accents = [
   { name: "red", color: "oklch(0.55 0.25 27)", bg: "bg-red-500" },
   { name: "orange", color: "oklch(0.65 0.2 41)", bg: "bg-orange-500" },
-  { name: "green", color: "oklch(0.55 0.2 145)", bg: "bg-green-500" },
+  { name: "purple", color: "oklch(0.5 0.3 300)", bg: "[rgb(153,51,255)]" },
+  { name: "lime", color: "oklch(0.87 0.35 142)", bg: "[rgb(0,255,0)]" },
 ];
 
 export function AccentPicker() {
   const [active, setActive] = useState("orange");
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
 
   function handleClick(accent: (typeof accents)[number]) {
     setActive(accent.name);
@@ -18,7 +31,7 @@ export function AccentPicker() {
   }
 
   return (
-    <div className="fixed top-4 left-4 z-50 flex items-center gap-2">
+    <div ref={ref} className="fixed top-4 left-4 z-50 flex items-center gap-2">
       {/* Palette icon button */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -34,14 +47,14 @@ export function AccentPicker() {
 
       {/* Color circles */}
       <div
-        className={`flex items-center gap-2 transition-all ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`flex h-10 items-center gap-2 border border-neutral-800 bg-black px-3 shadow-xs transition-all ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
-        {accents.map((accent, i) => (
+        {accents.map((accent) => (
           <button
             key={accent.name}
             onClick={() => handleClick(accent)}
-            className={`${accent.bg} h-3 w-3 rounded-full transition-transform hover:scale-125  ${active === accent.name ? "ring-2 ring-white ring-offset-1 ring-offset-black" : ""}`}
-            style={{ animationDelay: `${i * 150}ms` }}
+            className={`h-4 w-4 rounded-full transition-transform hover:scale-125 ${active === accent.name ? "ring-2 ring-white ring-offset-1 ring-offset-black" : ""}`}
+            style={{ backgroundColor: accent.color }}
             aria-label={`Set accent to ${accent.name}`}
           />
         ))}
