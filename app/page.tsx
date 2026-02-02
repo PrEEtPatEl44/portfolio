@@ -140,7 +140,7 @@ export default function Home() {
                       variant="outline"
                       className="rounded border-zinc-700 bg-transparent font-[family-name:var(--font-space-mono)] text-xs text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-300"
                     >
-                      {tag}
+                      <TextFlip>{tag}</TextFlip>
                     </Badge>
                   ))}
                 </div>
@@ -238,7 +238,7 @@ export default function Home() {
                       variant="outline"
                       className="rounded border-zinc-700 bg-transparent font-[family-name:var(--font-space-mono)] text-xs text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-300"
                     >
-                      {tag}
+                      <TextFlip>{tag}</TextFlip>
                     </Badge>
                   ))}
                 </div>
@@ -270,7 +270,7 @@ export default function Home() {
                   className="gap-2 rounded border-zinc-700 bg-transparent px-3 py-2 font-[family-name:var(--font-space-mono)] text-sm text-zinc-300 transition-colors hover:border-brand/50 hover:text-white"
                 >
                   <Icon className="h-4 w-4 text-brand" />
-                  {skill.name}
+                  <TextFlip>{skill.name}</TextFlip>
                 </Badge>
               );
             })}
