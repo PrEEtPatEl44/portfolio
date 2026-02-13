@@ -92,7 +92,7 @@ export function MusicPlayer() {
           }}
           className="absolute top-14 right-0 animate-in fade-in slide-in-from-top-2 duration-300 cursor-pointer"
         >
-          <div className="relative flex items-center gap-2 border-2 border-brand bg-brand px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs tracking-widest text-black font-bold whitespace-nowrap">
+          <div className="relative flex items-center gap-2 border-2 border-brand bg-brand px-4 py-2 font-space-mono text-xs tracking-widest text-black font-bold whitespace-nowrap">
             [ SYSTEM: PLAY CALMING AUDIO? ]
             <span
               role="button"
@@ -127,7 +127,7 @@ export function MusicPlayer() {
           </button>
         </DialogTrigger>
 
-        <DialogContent className="origin-top-right rounded-none border border-neutral-800 bg-black p-0 font-[family-name:var(--font-space-mono)] sm:max-w-sm data-[state=open]:slide-in-from-top-8 data-[state=open]:slide-in-from-right-8 data-[state=closed]:slide-out-to-top-8 data-[state=closed]:slide-out-to-right-8 [&>button]:text-neutral-500 [&>button]:hover:text-brand">
+        <DialogContent className="origin-top-right rounded-none border border-neutral-800 bg-black p-0 font-space-mono sm:max-w-sm data-[state=open]:slide-in-from-top-8 data-[state=open]:slide-in-from-right-8 data-[state=closed]:slide-out-to-top-8 data-[state=closed]:slide-out-to-right-8 [&>button]:text-neutral-500 [&>button]:hover:text-brand">
           <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle className="text-sm tracking-[0.2em] text-brand">
               SELECT FREQUENCY
