@@ -1,0 +1,36 @@
+---
+title: "Running Local LLMs: What I've Learned So Far"
+description: "A practical look at running open-source language models locally — the hardware tradeoffs, quantization tricks, and why I think local AI is worth the effort."
+date: "Feb 8, 2026"
+readTime: "5 min read"
+---
+
+Over the past few months, I've been deep into running large language models locally on my own hardware. It started as curiosity — could I actually run something useful without relying on cloud APIs? Turns out, the answer is yes, but with caveats.
+
+## Why Local?
+
+The appeal is simple: privacy, no API costs, and the ability to experiment freely. When you're iterating on prompts or fine-tuning workflows, not having to worry about rate limits or per-token pricing is liberating.
+
+## Hardware Reality Check
+
+I'm running a desktop with 32GB RAM and an RTX 3080 (10GB VRAM). That's enough to run 7B–13B parameter models comfortably with quantization. Anything larger requires offloading layers to CPU, which tanks performance.
+
+The key insight: **VRAM is the bottleneck**, not CPU or system RAM. A model that fits entirely in VRAM will run 5–10x faster than one that spills over.
+
+## Quantization is Your Friend
+
+Running a full-precision 13B model requires ~26GB of VRAM. With 4-bit quantization (GPTQ or GGUF), that drops to ~7GB. The quality loss is surprisingly minimal for most tasks — coding assistance, summarization, and general Q&A work great.
+
+Tools like llama.cpp and ollama have made this incredibly accessible. A single command can download and run a quantized model.
+
+## What Actually Works
+
+For coding tasks, CodeLlama 13B quantized to 4-bit has been my daily driver. It handles autocomplete, refactoring suggestions, and explaining code well enough that I rarely reach for cloud APIs anymore.
+
+For general conversation and writing, Mistral 7B punches way above its weight class. Fast inference and genuinely useful outputs.
+
+## The Tradeoffs
+
+Local models aren't replacing GPT-4 or Claude for complex reasoning tasks. They struggle with nuanced instructions, long-context problems, and tasks requiring broad world knowledge. But for focused, domain-specific work? They're more than good enough.
+
+The ecosystem is moving fast. What required a PhD and a cluster two years ago now runs on a gaming PC. I'm excited to see where this goes.

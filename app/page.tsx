@@ -23,8 +23,8 @@ import {
   workExperience,
   projects,
   education,
-  blogPosts,
 } from "@/data/data";
+import { getAllPosts } from "@/lib/blog";
 import { AccentPicker } from "@/components/ui/accent-picker";
 import { MusicPlayer } from "@/components/ui/music-player";
 import { GitHubActivity } from "@/components/ui/github-activity";
@@ -271,7 +271,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-6">
-              {blogPosts.slice(0, 2).map((post) => (
+              {getAllPosts().slice(0, 2).map((post) => (
                 <Link
                   key={post.slug}
                   href={`/blogs/${post.slug}`}

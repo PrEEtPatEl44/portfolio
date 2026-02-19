@@ -1,12 +1,13 @@
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MDXRemote } from "next-mdx-remote/rsc";
 import { FadeIn } from "@/components/ui/fade-in";
 import { TextFlip } from "@/components/ui/text-flip";
-import { blogPosts } from "@/data/data";
+import { getAllPosts, getPostBySlug } from "@/lib/blog";
 
 export function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
+  return getAllPosts().map((post) => ({ slug: post.slug }));
 }
 
 export default async function BlogPostPage({
@@ -15,7 +16,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = blogPosts.find((p) => p.slug === slug);
+  const post = getPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -53,52 +54,8 @@ export default async function BlogPostPage({
 
             <div className="mb-10 h-px w-full bg-zinc-800" />
 
-            <article className="prose-blog space-y-6 font-space-mono text-sm leading-relaxed text-zinc-400">
-              {post.content.split("\n\n").map((block, i) => {
-                if (block.startsWith("## ")) {
-                  return (
-                    <h2
-                      key={i}
-                      className="mt-8 text-lg font-bold text-white"
-                    >
-                      {block.replace("## ", "")}
-                    </h2>
-                  );
-                }
-                if (block.startsWith("1. ") || block.match(/^\d+\.\s/)) {
-                  const items = block.split("\n").filter(Boolean);
-                  return (
-                    <ol key={i} className="list-decimal space-y-2 pl-5">
-                      {items.map((item, j) => (
-                        <li key={j}>
-                          {item.replace(/^\d+\.\s/, "").split("**").map((part, k) =>
-                            k % 2 === 1 ? (
-                              <strong key={k} className="text-white">
-                                {part}
-                              </strong>
-                            ) : (
-                              part
-                            )
-                          )}
-                        </li>
-                      ))}
-                    </ol>
-                  );
-                }
-                return (
-                  <p key={i}>
-                    {block.split("**").map((part, k) =>
-                      k % 2 === 1 ? (
-                        <strong key={k} className="text-white">
-                          {part}
-                        </strong>
-                      ) : (
-                        part
-                      )
-                    )}
-                  </p>
-                );
-              })}
+            <article className="prose-blog font-space-mono text-sm leading-relaxed text-zinc-400">
+              <MDXRemote source={post.content} />
             </article>
           </div>
         </FadeIn>

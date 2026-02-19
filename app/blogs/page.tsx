@@ -2,9 +2,11 @@ import { ArrowLeft, Calendar, Clock, FileText } from "lucide-react";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
 import { TextFlip } from "@/components/ui/text-flip";
-import { blogPosts } from "@/data/data";
+import { getAllPosts } from "@/lib/blog";
 
 export default function BlogsPage() {
+  const blogPosts = getAllPosts();
+
   return (
     <div className="bg-grid-pattern crt min-h-screen">
       <div className="sticky top-0 z-50 h-1 w-full bg-brand" />
