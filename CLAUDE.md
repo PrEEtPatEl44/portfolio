@@ -4,42 +4,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- `npm run dev` — start dev server (Next.js on localhost:3000)
-- `npm run build` — production build
-- `npm run lint` — run ESLint
+```bash
+npm run dev      # Start development server
+npm run build    # Production build
+npm run lint     # Run ESLint
+npm start        # Start production server
+```
 
-No test framework is configured.
+Package manager: **npm**
 
 ## Architecture
 
-Next.js 16 App Router personal portfolio site. Dark-only theme with a retro CRT/terminal aesthetic.
+Personal portfolio site built with **Next.js 16** (App Router), **React 19**, **TypeScript**, and **Tailwind CSS 4**.
 
-### Key structure
+### Key Directories
 
-- `app/page.tsx` — single-page portfolio with sections: Hero, Work, Education, Projects, Blog, Skills, Activity (GitHub heatmap)
-- `app/blogs/` — blog listing page and `[slug]/page.tsx` dynamic route
-- `data/data.ts` — all portfolio content (hero info, work experience, education, projects, blog posts with inline markdown content). Blog posts are stored as string content in this file, not as separate markdown files.
-- `components/ui/` — shadcn/ui primitives (button, badge, dialog) plus custom components
+- `app/` — Next.js App Router: single-page site with root layout and one page
+- `components/ui/` — Reusable UI components (shadcn/ui + custom)
+- `data/data.ts` — **All site content lives here** (hero, work, education, projects, skills). Content is fully decoupled from UI — update this file to change any text/data
 - `lib/utils.ts` — `cn()` utility (clsx + tailwind-merge)
+- `public/audio/` — Lo-fi music tracks for the ambient player
 
-### Theming and styling
+### Component Patterns
 
-- Tailwind CSS v4 with shadcn/ui (new-york style). CSS variables defined in `app/globals.css`.
-- `--brand` CSS variable controls the accent color site-wide (default: orange oklch). The `AccentPicker` component lets users switch it at runtime.
-- Custom CSS utilities in globals.css: `.bg-grid-pattern`, `.text-outline`, `.crt` (scanline overlay + flicker), `.glitch-text` (animated text distortion).
-- Font: Space Mono (`font-space-mono`) is the primary display font used throughout.
-- `html` element has `className="dark"` hardcoded — dark mode only.
+- **Server Components by default**, `"use client"` only for interactive components (AccentPicker, MusicPlayer, GitHubActivity, TextFlip, GlitchText, FadeIn)
+- **shadcn/ui** (New York style) with CVA for variant-based components. Config in `components.json`
+- **Framer Motion** for scroll-triggered animations via the `FadeIn` wrapper
+- Path alias: `@/*` maps to project root
 
-### Custom components
+### Theme System
 
-- `AccentPicker` — fixed top-left color picker that sets `--brand` CSS variable
-- `MusicPlayer` — fixed top-right ambient audio player using Radix Dialog, plays from `/public/audio/`
-- `GlitchText`, `TextFlip`, `FadeIn` — animation components using framer-motion
-- `GitHubActivity` — client component using `react-activity-calendar`
+- Dark mode only (HTML root has `className="dark"`)
+- **OKLCH color space** for the dynamic accent color system
+- CSS custom property `--brand` is changed at runtime by AccentPicker (4 presets: red, orange, purple, lime)
+- Theme variables defined in `app/globals.css` under `:root` and `.dark`
 
-### Conventions
+### Visual Style
 
-- All UI components are in `components/ui/` with kebab-case filenames
-- Client components use `"use client"` directive; pages are server components by default
-- Icons from `lucide-react` exclusively
-- Path aliases: `@/components`, `@/lib`, `@/data`
+Retro/terminal aesthetic using Space Mono font, CRT scanline overlay, glitch text effects, grid background pattern, and blinking cursor — all defined in `app/globals.css`.
+
+### Fonts
+
+Four Google Fonts loaded via `next/font` in `layout.tsx`: Geist Sans, Geist Mono, Space Mono (primary UI font), Inter. Applied via CSS variables (`--font-space-mono`, etc.) and inline `font-[family-name:var(...)]` syntax.
+
+## External APIs
+
+- GitHub contributions calendar fetches from `github-contributions-api.jogruber.de` (no auth required, username: `PrEEtPatEl44`)
+
+## Deployment
+
+Deployed on **Vercel**. No environment variables needed.
