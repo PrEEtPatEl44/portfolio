@@ -26,12 +26,12 @@ export default async function BlogPostPage({
     <div className="bg-grid-pattern crt min-h-screen">
       <div className="sticky top-0 z-50 h-1 w-full bg-brand" />
 
-      <main className="mx-auto max-w-3xl px-8 py-20 sm:px-16">
+      <main className="mx-auto max-w-3xl px-6 py-12 sm:px-8">
         <FadeIn>
           <div>
             <Link
               href="/blogs"
-              className="group/link mb-8 inline-flex items-center gap-2 font-space-mono text-sm text-zinc-400 transition-colors hover:text-brand"
+              className="group/link mb-8 inline-flex items-center gap-2 font-space-mono text-xs text-zinc-400 transition-colors hover:text-brand"
             >
               <ArrowLeft className="h-4 w-4 transition-transform group-hover/link:-translate-x-1" />
               <TextFlip>All posts</TextFlip>
@@ -48,13 +48,13 @@ export default async function BlogPostPage({
               </span>
             </div>
 
-            <h1 className="mb-6 font-space-mono text-2xl font-bold text-white sm:text-3xl">
+            <h1 className="mb-6 font-space-mono text-xl font-bold text-white sm:text-2xl">
               {post.title}
             </h1>
 
             <div className="mb-10 h-px w-full bg-zinc-800" />
 
-            <article className="prose-blog font-space-mono text-sm leading-relaxed text-zinc-400">
+            <article className="prose-blog font-space-mono text-xs leading-relaxed text-zinc-400">
               <MDXRemote source={post.content} />
             </article>
           </div>

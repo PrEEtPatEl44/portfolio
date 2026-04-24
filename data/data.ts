@@ -18,6 +18,12 @@ import {
   Brain,
   Eye,
   TestTube,
+  MousePointerClick,
+  Bot,
+  Search,
+  Link as LinkIcon,
+  Network,
+  Users,
   LucideIcon,
 } from "lucide-react";
 
@@ -68,8 +74,7 @@ export const hero: Hero = {
   name: "PREET PATEL",
   location: "Toronto, Ontario",
   position: "Software Developer @ FGF Brands",
-  description:
-    "I love building things and solving problems. Since starting CS in 2022, I’ve been constantly experimenting and learning by doing. These days, I’m focused on discovering and running local AI models, tweaking setups, and understanding the tradeoffs between performance, memory, and hardware. When I’m not doing that, I’m probably watching movies or working on side projects.",
+  description: "Shipping agents before they ship me.",
   socialLinks: [
     {
       name: "GITHUB",
@@ -108,12 +113,18 @@ export const skills: Skill[] = [
   { name: "Jest", icon: TestTube },
   { name: "Tailwind CSS", icon: Palette },
   { name: "Figma", icon: Figma },
+  { name: "Cursor", icon: MousePointerClick },
+  { name: "Claude Code", icon: Bot },
+  { name: "RAG", icon: Search },
+  { name: "LangChain", icon: LinkIcon },
+  { name: "LangGraph", icon: Network },
+  { name: "DeepAgents", icon: Users },
 ];
 
 export const education: Education[] = [
   {
     school: "Seneca Polytechnic",
-    program: "Computer Programming and Analysis, Advanced Diploma",
+    program: "Computer Programming and Analysis",
     period: "May 2023 - Dec. 2025",
     link: "https://www.senecapolytechnic.ca",
   },
@@ -123,9 +134,9 @@ export const workExperience: WorkExperience[] = [
   {
     company: "FGF Brands",
     role: "Software Developer Intern",
-    period: "Sept. 2024 - May. 2025, Jan. 2026 - Present",
+    period: "Present",
     description:
-      "Building internal tools and web applications to streamline manufacturing processes and improve operational efficiency.",
+      "Internal tooling, shipped fast. .NET + Node services moving factory ops.",
     tags: [
       ".NET",
       "C#",
@@ -162,7 +173,7 @@ export const projects: Project[] = [
   {
     title: "Prepify",
     description:
-      "An AI Based Job Search helper which helps users through every step of the job search journey.",
+      "RAG-powered job-search copilot. Résumé in, interviews out.",
     tags: [
       "React",
       "TypeScript",
@@ -176,7 +187,7 @@ export const projects: Project[] = [
   {
     title: "Fragments",
     description:
-      "A lightweight Node.js/Express-based backend REST API for managing fragments of data hosted on AWS S3.",
+      "Stateless REST API for chunked data on S3. Dockerized, Hurl-tested.",
     tags: [
       "Next.js",
       "Node.js",
@@ -194,7 +205,7 @@ export const projects: Project[] = [
   {
     title: "Self-Driving Car CNN",
     description:
-      "A self-driving car simulation using deep learning. It covers the full workflow from data preprocessing and image augmentation to training a convolutional neural network to predict steering angles from camera images.",
+      "CNN that steers from raw camera frames — pixels to angles, end-to-end.",
     tags: ["Python", "TensorFlow", "Keras", "OpenCV"],
     link: "https://github.com/PrEEtPatEl44/CarSimProject",
     featured: true,
@@ -202,7 +213,7 @@ export const projects: Project[] = [
   {
     title: "DevOps Companion",
     description:
-      "An AI powered bot that assists project managers for their daily workflows That won FGF Case Competition 2024.",
+      "Agentic bot for PM workflows on Azure DevOps. Won FGF Case Comp 2024.",
     tags: [
       "PostgreSQL",
       "OpenAI API",
@@ -212,5 +223,12 @@ export const projects: Project[] = [
       "Azure DevOps",
     ],
     link: "#",
+  },
+  {
+    title: "Reels DeepAgents",
+    description:
+      "Multi-agent pipeline that scripts, scores, and stitches short-form reels.",
+    tags: ["Python", "DeepAgents", "LangGraph", "LLMs"],
+    link: "https://github.com/PrEEtPatEl44/reels-deepagents/",
   },
 ];
