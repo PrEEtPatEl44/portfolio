@@ -20,6 +20,7 @@ import { TerminalBox, slugify } from "@/components/ui/terminal-box";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { SortableTags } from "@/components/ui/sortable-tags";
+import { PixelMascot } from "@/components/ui/pixel-mascot";
 import {
   hero,
   skills,
@@ -74,29 +75,7 @@ export default function Home() {
         <section className="flex w-full justify-center px-6 pt-12 pb-8 sm:px-10 lg:px-16">
           <div className="flex items-center gap-10">
             {/* Pixel mascot */}
-            <svg
-              viewBox="0 0 12 8"
-              className="h-16 w-24 shrink-0 text-brand"
-              fill="currentColor"
-              shapeRendering="crispEdges"
-              aria-hidden
-            >
-              <rect x="4" y="0" width="4" height="1" />
-              <rect x="3" y="1" width="6" height="1" />
-              <rect x="2" y="2" width="8" height="1" />
-              <rect x="1" y="3" width="3" height="1" />
-              <rect x="5" y="3" width="2" height="1" />
-              <rect x="8" y="3" width="3" height="1" />
-              <rect x="0" y="4" width="12" height="1" />
-              <rect x="0" y="5" width="12" height="1" />
-              <rect x="1" y="6" width="2" height="1" />
-              <rect x="5" y="6" width="2" height="1" />
-              <rect x="9" y="6" width="2" height="1" />
-              <rect x="0" y="7" width="1" height="1" />
-              <rect x="2" y="7" width="1" height="1" />
-              <rect x="9" y="7" width="1" height="1" />
-              <rect x="11" y="7" width="1" height="1" />
-            </svg>
+            <PixelMascot className="h-16 w-24" />
 
             <div className="min-w-0 space-y-1 font-space-mono text-sm leading-relaxed">
               <div>
