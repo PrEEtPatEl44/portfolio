@@ -1,16 +1,25 @@
-import { ArrowLeft, Terminal } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Terminal } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { FadeIn } from "@/components/ui/fade-in";
 import { TextFlip } from "@/components/ui/text-flip";
 import { StaggerList, StaggerItem } from "@/components/ui/stagger-list";
 import { TerminalBox, slugify } from "@/components/ui/terminal-box";
+import { BGPattern } from "@/components/ui/bg-pattern";
+import { ScrollProgress } from "@/components/ui/scroll-progress";
+import { SortableTags } from "@/components/ui/sortable-tags";
 import { projects } from "@/data/data";
 
 export default function ProjectsPage() {
   return (
-    <div className="bg-grid-pattern crt min-h-screen">
-      <div className="sticky top-0 z-50 h-1 w-full bg-brand" />
+    <div className="crt relative min-h-screen">
+      <BGPattern
+        variant="grid"
+        mask="fade-edges"
+        size={40}
+        fill="rgba(255,255,255,0.12)"
+      />
+      <ScrollProgress />
 
       <main className="mx-auto max-w-3xl space-y-8 px-6 py-12 sm:px-8">
         <FadeIn>
@@ -35,35 +44,34 @@ export default function ProjectsPage() {
         <StaggerList className="space-y-3">
           {projects.map((project) => (
             <StaggerItem key={project.title}>
-              <a
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block"
-              >
-                <TerminalBox
-                  title={`~/projects/${slugify(project.title)}.sh`}
-                  className="group-hover:border-brand/50"
+              <TerminalBox title={`~/projects/${slugify(project.title)}.sh`}>
+                <a
+                  href={project.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/link mb-1 inline-flex items-center gap-1 font-space-mono text-sm font-medium text-white transition-colors hover:text-brand"
                 >
-                  <h2 className="mb-1 font-space-mono text-sm font-medium text-white transition-colors group-hover:text-brand">
-                    {project.title}
-                  </h2>
-                  <p className="mb-3 font-space-mono text-xs text-zinc-400">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
+                  <TextFlip>{project.title}</TextFlip>
+                  <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
+                </a>
+                <p className="mb-3 font-space-mono text-xs text-zinc-400">
+                  {project.description}
+                </p>
+                <SortableTags
+                  className="flex flex-wrap gap-2"
+                  items={project.tags.map((tag) => ({
+                    key: tag,
+                    node: (
                       <Badge
-                        key={tag}
                         variant="outline"
                         className="rounded border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-300"
                       >
-                        {tag}
+                        <TextFlip>{tag}</TextFlip>
                       </Badge>
-                    ))}
-                  </div>
-                </TerminalBox>
-              </a>
+                    ),
+                  }))}
+                />
+              </TerminalBox>
             </StaggerItem>
           ))}
         </StaggerList>
