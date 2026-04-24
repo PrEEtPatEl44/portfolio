@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { ActivityCalendar, type Activity } from "react-activity-calendar";
 
 const GITHUB_USERNAME = "PrEEtPatEl44";
@@ -16,6 +16,9 @@ function getBrandColor(): string {
 export function GitHubActivity() {
   const [data, setData] = useState<Activity[] | null>(null);
   const [brandColor, setBrandColor] = useState<string>("oklch(0.65 0.2 41)");
+  const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(
+    null,
+  );
 
   // Watch for accent changes
   useEffect(() => {
@@ -59,18 +62,46 @@ export function GitHubActivity() {
   }
 
   return (
-    <ActivityCalendar
-      data={data}
-      theme={colorCustomization()}
-      colorScheme="dark"
-      blockSize={12}
-      blockRadius={2}
-      blockMargin={3}
-      fontSize={12}
-      style={{
-        fontFamily: "var(--font-space-mono)",
-        color: "#a1a1aa", // zinc-400
-      }}
-    />
+    <>
+      <ActivityCalendar
+        data={data}
+        theme={colorCustomization()}
+        colorScheme="dark"
+        blockSize={12}
+        blockRadius={2}
+        blockMargin={3}
+        fontSize={12}
+        renderBlock={(block, activity) => {
+          const label = `${
+            activity.count === 0
+              ? "No"
+              : `${activity.count} contribution${
+                  activity.count === 1 ? "" : "s"
+                }`
+          } on ${activity.date}`;
+          return React.cloneElement(block, {
+            onMouseEnter: (e: React.MouseEvent) =>
+              setTip({ x: e.clientX, y: e.clientY, text: label }),
+            onMouseMove: (e: React.MouseEvent) =>
+              setTip((t) =>
+                t ? { ...t, x: e.clientX, y: e.clientY } : null,
+              ),
+            onMouseLeave: () => setTip(null),
+          });
+        }}
+        style={{
+          fontFamily: "var(--font-space-mono)",
+          color: "#a1a1aa", // zinc-400
+        }}
+      />
+      {tip && (
+        <div
+          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded border border-zinc-700 bg-black/90 px-2 py-1 font-space-mono text-xs whitespace-nowrap text-zinc-200 shadow-lg"
+          style={{ left: tip.x, top: tip.y - 8 }}
+        >
+          {tip.text}
+        </div>
+      )}
+    </>
   );
 }
