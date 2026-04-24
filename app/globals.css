@@ -129,20 +129,30 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
   body {
     @apply bg-background text-foreground;
   }
 }
 
-@layer utilities {
-  .bg-grid-pattern {
-    background-image:
-      linear-gradient(to right, oklch(1 0 0 / 0.06) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(1 0 0 / 0.06) 1px, transparent 1px);
-    background-size: 40px 40px;
-    background-position: center center;
-  }
+.no-scrollbar,
+.no-scrollbar * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar,
+.no-scrollbar *::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
 
+@layer utilities {
   .text-outline {
     color: transparent;
     -webkit-text-stroke: 2px oklch(0.7 0 0);

@@ -15,10 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { TextFlip } from "@/components/ui/text-flip";
 import { FadeIn } from "@/components/ui/fade-in";
 import { StaggerList, StaggerItem } from "@/components/ui/stagger-list";
-import { AnimatedBadge } from "@/components/ui/animated-badge";
-import { SocialIconLink } from "@/components/ui/social-icon-link";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { TerminalBox, slugify } from "@/components/ui/terminal-box";
+import { BGPattern } from "@/components/ui/bg-pattern";
+import { ScrollProgress } from "@/components/ui/scroll-progress";
+import { SortableTags } from "@/components/ui/sortable-tags";
 import {
   hero,
   skills,
@@ -31,77 +32,124 @@ import { AccentPicker } from "@/components/ui/accent-picker";
 import { MusicPlayer } from "@/components/ui/music-player";
 import { GitHubActivity } from "@/components/ui/github-activity";
 
+function getVersion(): string {
+  const dob = new Date(2004, 3, 4);
+  const now = new Date();
+
+  const beforeBday =
+    now.getMonth() < dob.getMonth() ||
+    (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate());
+  const age = now.getFullYear() - dob.getFullYear() - (beforeBday ? 1 : 0);
+
+  const lastBday = new Date(
+    beforeBday ? now.getFullYear() - 1 : now.getFullYear(),
+    dob.getMonth(),
+    dob.getDate(),
+  );
+  const daysSinceBday = Math.floor(
+    (now.getTime() - lastBday.getTime()) / 86_400_000,
+  );
+
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `v${age}.${month}.${daysSinceBday}`;
+}
+
+export const revalidate = 3600;
+
 export default function Home() {
   return (
-    <div className="bg-grid-pattern crt min-h-screen">
-      {/* Top accent line - sticky */}
-      <div className="sticky top-0 z-50 h-1 w-full bg-brand" />
+    <div className="crt relative min-h-screen">
+      <BGPattern
+        variant="grid"
+        mask="fade-edges"
+        size={40}
+        fill="rgba(255,255,255,0.12)"
+      />
+      <ScrollProgress />
       <AccentPicker />
       <MusicPlayer />
 
-      <main className="mx-auto max-w-3xl space-y-12 px-6 py-12 sm:px-8">
-        {/* Hero Section */}
-        <FadeIn>
-          <section>
-            <TerminalBox title="~/status.sh" className="text-xs">
-              <div className="space-y-1.5 text-zinc-400">
-                <div>
-                  <span className="text-brand">$</span> whoami
-                </div>
-                <div className="pl-3 text-white">preet_patel</div>
-                <div className="my-2 h-px bg-zinc-800" />
-                <div>
-                  <span className="text-brand">&gt;</span> status:{" "}
-                  <span className="text-white">
-                    shipping
-                    <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-brand align-middle animate-pulse" />
-                  </span>
-                </div>
-                <div>
-                  <span className="text-brand">&gt;</span> where:{" "}
-                  <span className="text-white">{hero.location}</span>
-                </div>
-                <div>
-                  <span className="text-brand">&gt;</span> role:{" "}
-                  <span className="text-white">
-                    {workExperience[0].role}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-brand">&gt;</span> at:{" "}
-                  <a
-                    href={workExperience[0].link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white underline-offset-4 transition-colors hover:text-brand hover:underline"
-                  >
-                    {workExperience[0].company}
-                  </a>
-                </div>
-              </div>
-            </TerminalBox>
-
-            <StaggerList
-              className="mt-4 flex items-center gap-2"
-              stagger={0.06}
-              amount={0.5}
+      {/* Full-bleed hero */}
+      <FadeIn>
+        <section className="flex w-full justify-center px-6 pt-12 pb-8 sm:px-10 lg:px-16">
+          <div className="flex items-center gap-10">
+            {/* Pixel mascot */}
+            <svg
+              viewBox="0 0 12 8"
+              className="h-16 w-24 shrink-0 text-brand"
+              fill="currentColor"
+              shapeRendering="crispEdges"
+              aria-hidden
             >
-              {hero.socialLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <SocialIconLink
-                    key={link.name}
-                    href={link.href}
-                    label={link.name}
-                  >
-                    <Icon className="h-4 w-4 text-neutral-500 transition-colors group-hover:text-brand" />
-                  </SocialIconLink>
-                );
-              })}
-            </StaggerList>
-          </section>
-        </FadeIn>
+              <rect x="4" y="0" width="4" height="1" />
+              <rect x="3" y="1" width="6" height="1" />
+              <rect x="2" y="2" width="8" height="1" />
+              <rect x="1" y="3" width="3" height="1" />
+              <rect x="5" y="3" width="2" height="1" />
+              <rect x="8" y="3" width="3" height="1" />
+              <rect x="0" y="4" width="12" height="1" />
+              <rect x="0" y="5" width="12" height="1" />
+              <rect x="1" y="6" width="2" height="1" />
+              <rect x="5" y="6" width="2" height="1" />
+              <rect x="9" y="6" width="2" height="1" />
+              <rect x="0" y="7" width="1" height="1" />
+              <rect x="2" y="7" width="1" height="1" />
+              <rect x="9" y="7" width="1" height="1" />
+              <rect x="11" y="7" width="1" height="1" />
+            </svg>
 
+            <div className="min-w-0 space-y-1 font-space-mono text-sm leading-relaxed">
+              <div>
+                <span className="font-bold text-white">Preet Codes</span>
+                <span className="text-zinc-500"> {getVersion()}</span>
+              </div>
+              <div className="hidden text-zinc-300 sm:block">
+                Espresso 4.7 with high jitters{" "}
+                <span className="text-zinc-600">·</span> Imposter Syndrome Pro
+              </div>
+              <div className="flex flex-wrap items-center gap-x-2 text-zinc-500">
+                <span>~/portfolio</span>
+                {hero.socialLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <span
+                      key={link.name}
+                      className="flex items-center gap-x-2"
+                    >
+                      <span className="text-zinc-600">·</span>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={link.name}
+                        className="inline-flex text-zinc-400 transition-colors hover:text-brand"
+                      >
+                        <TextFlip>
+                          <Icon className="h-3.5 w-3.5" />
+                        </TextFlip>
+                      </a>
+                    </span>
+                  );
+                })}
+              </div>
+              <div className="text-zinc-500">
+                {hero.location} <span className="text-zinc-600">·</span>{" "}
+                {workExperience[0].role} @{" "}
+                <a
+                  href={workExperience[0].link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-zinc-400 underline-offset-4 transition-colors hover:text-brand hover:underline"
+                >
+                  {workExperience[0].company}
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </FadeIn>
+
+      <main className="mx-auto max-w-3xl space-y-12 px-6 pb-12 sm:px-8">
         {/* Work Section */}
         <FadeIn>
           <section>
@@ -142,22 +190,20 @@ export default function Home() {
                       {job.description}
                     </p>
 
-                    <StaggerList
+                    <SortableTags
                       className="flex flex-wrap gap-2"
-                      stagger={0.03}
-                      amount={0.3}
-                    >
-                      {job.tags.map((tag) => (
-                        <AnimatedBadge key={tag}>
+                      items={job.tags.map((tag) => ({
+                        key: tag,
+                        node: (
                           <Badge
                             variant="outline"
                             className="rounded border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-300"
                           >
                             <TextFlip>{tag}</TextFlip>
                           </Badge>
-                        </AnimatedBadge>
-                      ))}
-                    </StaggerList>
+                        ),
+                      }))}
+                    />
                   </TerminalBox>
                 </StaggerItem>
               ))}
@@ -233,35 +279,36 @@ export default function Home() {
             <StaggerList className="space-y-3">
               {projects.slice(0, 2).map((project) => (
                 <StaggerItem key={project.title}>
-                  <a
-                    href={project.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group block"
+                  <TerminalBox
+                    title={`~/projects/${slugify(project.title)}.sh`}
                   >
-                    <TerminalBox
-                      title={`~/projects/${slugify(project.title)}.sh`}
-                      className="group-hover:border-brand/50"
+                    <a
+                      href={project.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group/link mb-1 inline-flex items-center gap-1 font-space-mono text-sm font-medium text-white transition-colors hover:text-brand"
                     >
-                      <h3 className="mb-1 font-space-mono text-sm font-medium text-white transition-colors group-hover:text-brand">
-                        {project.title}
-                      </h3>
-                      <p className="mb-3 font-space-mono text-xs text-zinc-400">
-                        {project.description}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tags.map((tag) => (
+                      <TextFlip>{project.title}</TextFlip>
+                      <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
+                    </a>
+                    <p className="mb-3 font-space-mono text-xs text-zinc-400">
+                      {project.description}
+                    </p>
+                    <SortableTags
+                      className="flex flex-wrap gap-2"
+                      items={project.tags.map((tag) => ({
+                        key: tag,
+                        node: (
                           <Badge
-                            key={tag}
                             variant="outline"
                             className="rounded border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-300"
                           >
-                            {tag}
+                            <TextFlip>{tag}</TextFlip>
                           </Badge>
-                        ))}
-                      </div>
-                    </TerminalBox>
-                  </a>
+                        ),
+                      }))}
+                    />
+                  </TerminalBox>
                 </StaggerItem>
               ))}
             </StaggerList>
@@ -331,14 +378,13 @@ export default function Home() {
             </div>
 
             {/* Skills badges */}
-            <StaggerList
+            <SortableTags
               className="flex flex-wrap justify-center gap-3"
-              stagger={0.04}
-            >
-              {skills.map((skill) => {
+              items={skills.map((skill) => {
                 const Icon = skill.icon;
-                return (
-                  <AnimatedBadge key={skill.name}>
+                return {
+                  key: skill.name,
+                  node: (
                     <Badge
                       variant="outline"
                       className="gap-2 rounded border-zinc-700 bg-transparent px-2.5 py-1.5 font-space-mono text-xs text-zinc-300 transition-colors hover:border-brand/50 hover:text-white"
@@ -346,10 +392,10 @@ export default function Home() {
                       <Icon className="h-4 w-4 text-brand" />
                       <TextFlip>{skill.name}</TextFlip>
                     </Badge>
-                  </AnimatedBadge>
-                );
+                  ),
+                };
               })}
-            </StaggerList>
+            />
           </section>
         </FadeIn>
 
@@ -362,7 +408,7 @@ export default function Home() {
                 ACTIVITY
               </h2>
             </div>
-            <div className="flex justify-center">
+            <div className="no-scrollbar flex justify-center overflow-x-auto">
               <GitHubActivity />
             </div>
           </section>
