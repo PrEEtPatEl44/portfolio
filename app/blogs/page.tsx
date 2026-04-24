@@ -3,14 +3,22 @@ import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
 import { TextFlip } from "@/components/ui/text-flip";
 import { TerminalBox } from "@/components/ui/terminal-box";
+import { BGPattern } from "@/components/ui/bg-pattern";
+import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { getAllPosts } from "@/lib/blog";
 
 export default function BlogsPage() {
   const blogPosts = getAllPosts();
 
   return (
-    <div className="bg-grid-pattern crt min-h-screen">
-      <div className="sticky top-0 z-50 h-1 w-full bg-brand" />
+    <div className="crt relative min-h-screen">
+      <BGPattern
+        variant="grid"
+        mask="fade-edges"
+        size={40}
+        fill="rgba(255,255,255,0.12)"
+      />
+      <ScrollProgress />
 
       <main className="mx-auto max-w-3xl space-y-8 px-6 py-12 sm:px-8">
         <FadeIn>
