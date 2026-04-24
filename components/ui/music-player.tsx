@@ -93,7 +93,7 @@ export function MusicPlayer() {
           className="absolute top-14 right-0 animate-in fade-in slide-in-from-top-2 duration-300 cursor-pointer"
         >
           <div className="relative flex items-center gap-2 border-2 border-brand bg-brand px-4 py-2 font-space-mono text-xs tracking-widest text-black font-bold whitespace-nowrap">
-            [ SYSTEM: PLAY CALMING AUDIO? ]
+            [ SYSTEM: PLAY CALMING MUSIC? ]
             <span
               role="button"
               aria-label="Dismiss"

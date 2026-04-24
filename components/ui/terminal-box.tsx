@@ -9,7 +9,7 @@ export function TerminalBox({
 }) {
   return (
     <div
-      className={`border border-zinc-800 bg-black/60 p-4 font-space-mono transition-colors ${className}`}
+      className={`border border-zinc-800 bg-black/60 p-4 font-space-mono transition-colors hover:border-brand/50 ${className}`}
     >
       <div className="mb-3 flex items-center gap-1.5 border-b border-zinc-800 pb-2">
         <span className="h-2.5 w-2.5 rounded-full bg-brand/70" />
