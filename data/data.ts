@@ -13,7 +13,6 @@ import {
   Zap,
   Github,
   Linkedin,
-  Twitter,
   Cloud,
   Brain,
   Eye,
@@ -86,11 +85,6 @@ export const hero: Hero = {
       href: "https://www.linkedin.com/in/preet-patel44/",
       icon: Linkedin,
     },
-    {
-      name: "X",
-      href: "https://x.com/prabornn",
-      icon: Twitter,
-    },
   ],
 };
 
@@ -136,16 +130,16 @@ export const workExperience: WorkExperience[] = [
     role: "Software Developer Intern",
     period: "Present",
     description:
-      "Internal tooling, shipped fast. .NET + Node services moving factory ops.",
+      "Shipping Internal AI tools with AI tools at light speed.",
     tags: [
-      ".NET",
-      "C#",
+      "Python",
       "TypeScript",
       "Node.js",
-      "PostgreSQL",
-      "SQL Server",
       "Azure",
-      "Python",
+      ".NET",
+      "C#",
+      "PostgreSQL",
+      "SQL Server"
     ],
     link: "https://fgfbrands.com",
   },
