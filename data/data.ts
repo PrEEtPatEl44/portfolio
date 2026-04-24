@@ -128,7 +128,7 @@ export const workExperience: WorkExperience[] = [
   {
     company: "FGF Brands",
     role: "Software Developer Intern",
-    period: "Present",
+    period: "Sept. 2024 - May 2025, Jan. 2026 - Present",
     description:
       "Shipping Internal AI tools with AI tools at light speed.",
     tags: [
