@@ -9,14 +9,16 @@ export function TerminalBox({
 }) {
   return (
     <div
-      className={`border border-zinc-800 bg-black/60 p-4 font-space-mono transition-colors hover:border-brand/50 ${className}`}
+      className={`border border-zinc-300 bg-white/60 p-4 font-space-mono transition-colors hover:border-brand/50 dark:border-zinc-800 dark:bg-black/60 ${className}`}
     >
-      <div className="mb-3 flex items-center gap-1.5 border-b border-zinc-800 pb-2">
+      <div className="mb-3 flex items-center gap-1.5 border-b border-zinc-300 pb-2 dark:border-zinc-800">
         <span className="h-2.5 w-2.5 rounded-full bg-brand/70" />
-        <span className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
-        <span className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+        <span className="h-2.5 w-2.5 rounded-full bg-zinc-400 dark:bg-zinc-700" />
+        <span className="h-2.5 w-2.5 rounded-full bg-zinc-400 dark:bg-zinc-700" />
         {title && (
-          <span className="ml-2 text-xs text-zinc-500">{title}</span>
+          <span className="ml-2 text-xs text-zinc-600 dark:text-zinc-500">
+            {title}
+          </span>
         )}
       </div>
       {children}

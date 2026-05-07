@@ -21,6 +21,7 @@ import { BGPattern } from "@/components/ui/bg-pattern";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { SortableTags } from "@/components/ui/sortable-tags";
 import { PixelMascot } from "@/components/ui/pixel-mascot";
+import { SpecialText } from "@/components/ui/special-text";
 import {
   hero,
   skills,
@@ -30,7 +31,7 @@ import {
 } from "@/data/data";
 import { getAllPosts } from "@/lib/blog";
 import { AccentPicker } from "@/components/ui/accent-picker";
-import { MusicPlayer } from "@/components/ui/music-player";
+// import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { GitHubActivity } from "@/components/ui/github-activity";
 
 function getVersion(): string {
@@ -64,11 +65,11 @@ export default function Home() {
         variant="grid"
         mask="fade-edges"
         size={40}
-        fill="rgba(255,255,255,0.12)"
+        fill="var(--grid-fill)"
       />
       <ScrollProgress />
       <AccentPicker />
-      <MusicPlayer />
+      {/* <ThemeToggle /> */}
 
       {/* Full-bleed hero */}
       <FadeIn>
@@ -79,12 +80,14 @@ export default function Home() {
 
             <div className="min-w-0 space-y-1 font-space-mono text-sm leading-relaxed">
               <div>
-                <span className="font-bold text-white">Preet Codes</span>
+                <SpecialText className="font-bold text-foreground">
+                  Preet Codes
+                </SpecialText>
                 <span className="text-zinc-500"> {getVersion()}</span>
               </div>
-              <div className="hidden text-zinc-300 sm:block">
+              <div className="hidden text-zinc-700 dark:text-zinc-300 sm:block">
                 Espresso 4.7 with high jitters{" "}
-                <span className="text-zinc-600">·</span> Imposter Syndrome Pro
+                <span className="text-zinc-400 dark:text-zinc-600">·</span> Imposter Syndrome Pro
               </div>
               <div className="flex flex-wrap items-center gap-x-2 text-zinc-500">
                 <span>~/portfolio</span>
@@ -95,13 +98,13 @@ export default function Home() {
                       key={link.name}
                       className="flex items-center gap-x-2"
                     >
-                      <span className="text-zinc-600">·</span>
+                      <span className="text-zinc-400 dark:text-zinc-600">·</span>
                       <a
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={link.name}
-                        className="inline-flex text-zinc-400 transition-colors hover:text-brand"
+                        className="inline-flex text-zinc-600 dark:text-zinc-400 transition-colors hover:text-brand"
                       >
                         <TextFlip>
                           <Icon className="h-3.5 w-3.5" />
@@ -112,13 +115,13 @@ export default function Home() {
                 })}
               </div>
               <div className="text-zinc-500">
-                {hero.location} <span className="text-zinc-600">·</span>{" "}
+                {hero.location} <span className="text-zinc-400 dark:text-zinc-600">·</span>{" "}
                 {workExperience[0].role} @{" "}
                 <a
                   href={workExperience[0].link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-zinc-400 underline-offset-4 transition-colors hover:text-brand hover:underline"
+                  className="text-zinc-600 dark:text-zinc-400 underline-offset-4 transition-colors hover:text-brand hover:underline"
                 >
                   {workExperience[0].company}
                 </a>
@@ -147,7 +150,7 @@ export default function Home() {
                   <TerminalBox title={`~/work/${slugify(job.company)}.sh`}>
                     <div className="mb-2 flex items-start justify-between">
                       <div>
-                        <h3 className="font-space-mono text-base font-medium text-white">
+                        <h3 className="font-space-mono text-base font-medium text-foreground">
                           {job.role}
                         </h3>
                         <a
@@ -165,7 +168,7 @@ export default function Home() {
                       </span>
                     </div>
 
-                    <p className="mb-3 font-space-mono text-xs leading-relaxed text-zinc-400">
+                    <p className="mb-3 font-space-mono text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
                       {job.description}
                     </p>
 
@@ -176,7 +179,7 @@ export default function Home() {
                         node: (
                           <Badge
                             variant="outline"
-                            className="rounded border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-300"
+                            className="rounded border-zinc-300 dark:border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-600 dark:text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-800 dark:hover:text-zinc-300"
                           >
                             <TextFlip>{tag}</TextFlip>
                           </Badge>
@@ -206,7 +209,7 @@ export default function Home() {
                   <TerminalBox title={`~/edu/${slugify(edu.school)}.sh`}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="font-space-mono text-base font-medium text-white">
+                        <h3 className="font-space-mono text-base font-medium text-foreground">
                           {edu.program}
                         </h3>
                         {edu.link ? (
@@ -248,7 +251,7 @@ export default function Home() {
               </div>
               <Link
                 href="/projects"
-                className="group/link inline-flex items-center gap-1 font-space-mono text-xs text-zinc-400 transition-colors hover:text-brand"
+                className="group/link inline-flex items-center gap-1 font-space-mono text-xs text-zinc-600 dark:text-zinc-400 transition-colors hover:text-brand"
               >
                 <TextFlip>See all</TextFlip>
                 <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
@@ -265,12 +268,12 @@ export default function Home() {
                       href={project.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group/link mb-1 inline-flex items-center gap-1 font-space-mono text-sm font-medium text-white transition-colors hover:text-brand"
+                      className="group/link mb-1 inline-flex items-center gap-1 font-space-mono text-sm font-medium text-foreground transition-colors hover:text-brand"
                     >
                       <TextFlip>{project.title}</TextFlip>
                       <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
                     </a>
-                    <p className="mb-3 font-space-mono text-xs text-zinc-400">
+                    <p className="mb-3 font-space-mono text-xs text-zinc-600 dark:text-zinc-400">
                       {project.description}
                     </p>
                     <SortableTags
@@ -280,7 +283,7 @@ export default function Home() {
                         node: (
                           <Badge
                             variant="outline"
-                            className="rounded border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-300"
+                            className="rounded border-zinc-300 dark:border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-600 dark:text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-800 dark:hover:text-zinc-300"
                           >
                             <TextFlip>{tag}</TextFlip>
                           </Badge>
@@ -306,7 +309,7 @@ export default function Home() {
               </div>
               <Link
                 href="/blogs"
-                className="group/link inline-flex items-center gap-1 font-space-mono text-xs text-zinc-400 transition-colors hover:text-brand"
+                className="group/link inline-flex items-center gap-1 font-space-mono text-xs text-zinc-600 dark:text-zinc-400 transition-colors hover:text-brand"
               >
                 <TextFlip>See all</TextFlip>
                 <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
@@ -331,10 +334,10 @@ export default function Home() {
                           {post.readTime}
                         </span>
                       </div>
-                      <h3 className="mb-1 font-space-mono text-sm font-medium text-white transition-colors group-hover:text-brand">
+                      <h3 className="mb-1 font-space-mono text-sm font-medium text-foreground transition-colors group-hover:text-brand">
                         {post.title}
                       </h3>
-                      <p className="font-space-mono text-xs text-zinc-400">
+                      <p className="font-space-mono text-xs text-zinc-600 dark:text-zinc-400">
                         {post.description}
                       </p>
                     </TerminalBox>
@@ -366,7 +369,7 @@ export default function Home() {
                   node: (
                     <Badge
                       variant="outline"
-                      className="gap-2 rounded border-zinc-700 bg-transparent px-2.5 py-1.5 font-space-mono text-xs text-zinc-300 transition-colors hover:border-brand/50 hover:text-white"
+                      className="gap-2 rounded border-zinc-300 dark:border-zinc-700 bg-transparent px-2.5 py-1.5 font-space-mono text-xs text-zinc-700 dark:text-zinc-300 transition-colors hover:border-brand/50 hover:text-white"
                     >
                       <Icon className="h-4 w-4 text-brand" />
                       <TextFlip>{skill.name}</TextFlip>
@@ -397,10 +400,10 @@ export default function Home() {
         <FadeIn>
           <section>
             <div className="flex flex-col items-center justify-center px-8 py-6 text-center">
-              <h2 className="mb-3 font-space-mono text-xl font-bold text-white sm:text-2xl">
+              <h2 className="mb-3 font-space-mono text-xl font-bold text-foreground sm:text-2xl">
                 Let&apos;s work together.
               </h2>
-              <p className="mb-6 max-w-md font-space-mono text-xs text-zinc-400">
+              <p className="mb-6 max-w-md font-space-mono text-xs text-zinc-600 dark:text-zinc-400">
                 Currently open for new opportunities and interesting projects.
               </p>
               <MagneticButton className="inline-block">

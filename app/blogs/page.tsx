@@ -5,6 +5,8 @@ import { TextFlip } from "@/components/ui/text-flip";
 import { TerminalBox } from "@/components/ui/terminal-box";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
+import { SpecialText } from "@/components/ui/special-text";
+// import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { getAllPosts } from "@/lib/blog";
 
 export default function BlogsPage() {
@@ -16,16 +18,17 @@ export default function BlogsPage() {
         variant="grid"
         mask="fade-edges"
         size={40}
-        fill="rgba(255,255,255,0.12)"
+        fill="var(--grid-fill)"
       />
       <ScrollProgress />
+      {/* <ThemeToggle /> */}
 
       <main className="mx-auto max-w-3xl space-y-8 px-6 py-12 sm:px-8">
         <FadeIn>
           <div>
             <Link
               href="/"
-              className="group/link mb-8 inline-flex items-center gap-2 font-space-mono text-xs text-zinc-400 transition-colors hover:text-brand"
+              className="group/link mb-8 inline-flex items-center gap-2 font-space-mono text-xs text-zinc-600 transition-colors hover:text-brand dark:text-zinc-400"
             >
               <ArrowLeft className="h-4 w-4 transition-transform group-hover/link:-translate-x-1" />
               <TextFlip>Back</TextFlip>
@@ -34,7 +37,9 @@ export default function BlogsPage() {
             <div className="mb-5 flex items-center gap-3">
               <FileText className="h-5 w-5 text-brand" />
               <h1 className="font-space-mono text-xl font-bold tracking-wider text-brand">
-                ALL POSTS
+                <SpecialText className="text-xl font-bold tracking-wider">
+                  ALL POSTS
+                </SpecialText>
               </h1>
             </div>
           </div>
@@ -58,10 +63,10 @@ export default function BlogsPage() {
                       {post.readTime}
                     </span>
                   </div>
-                  <h2 className="mb-1 font-space-mono text-sm font-medium text-white transition-colors group-hover:text-brand">
+                  <h2 className="mb-1 font-space-mono text-sm font-medium text-foreground transition-colors group-hover:text-brand">
                     {post.title}
                   </h2>
-                  <p className="font-space-mono text-xs text-zinc-400">
+                  <p className="font-space-mono text-xs text-zinc-600 dark:text-zinc-400">
                     {post.description}
                   </p>
                 </TerminalBox>

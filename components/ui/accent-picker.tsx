@@ -36,24 +36,24 @@ export function AccentPicker() {
       <button
         onClick={() => setOpen((v) => !v)}
         className={`group relative inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-none
-         border border-neutral-800 bg-black text-sm font-medium shadow-xs transition-colors hover:border-brand
+         border border-border bg-background text-sm font-medium shadow-xs transition-colors hover:border-brand
          focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring active:shadow-none ${
            open ? "border-brand" : ""
          }`}
         aria-label="Toggle accent picker"
       >
-        <Palette className="h-4 w-4 text-neutral-500 transition-colors group-hover:text-brand" />
+        <Palette className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-brand" />
       </button>
 
       {/* Color circles */}
       <div
-        className={`flex h-10 items-center gap-2 border border-neutral-800 bg-black px-3 shadow-xs transition-all ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`flex h-10 items-center gap-2 border border-border bg-background px-3 shadow-xs transition-all ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
         {accents.map((accent) => (
           <button
             key={accent.name}
             onClick={() => handleClick(accent)}
-            className={`h-4 w-4 rounded-full transition-transform hover:scale-125 ${active === accent.name ? "ring-2 ring-white ring-offset-1 ring-offset-black" : ""}`}
+            className={`h-4 w-4 rounded-full transition-transform hover:scale-125 ${active === accent.name ? "ring-2 ring-foreground ring-offset-1 ring-offset-background" : ""}`}
             style={{ backgroundColor: accent.color }}
             aria-label={`Set accent to ${accent.name}`}
           />

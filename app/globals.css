@@ -54,6 +54,7 @@
 
 :root {
   --radius: 0.625rem;
+  --grid-fill: rgba(0, 0, 0, 0.08);
   --brand: oklch(0.65 0.2 41);
   --brand-foreground: oklch(0.985 0 0);
   --card: oklch(1 0 0);
@@ -90,6 +91,7 @@
 }
 
 .dark {
+  --grid-fill: rgba(255, 255, 255, 0.12);
   --brand: oklch(0.65 0.2 41);
   --brand-foreground: oklch(0.985 0 0);
   --background: oklch(0% 0 0);
@@ -188,6 +190,16 @@
       to bottom,
       transparent 0px,
       transparent 2px,
+      rgba(0, 0, 0, 0.05) 2px,
+      rgba(0, 0, 0, 0.05) 4px
+    );
+  }
+
+  .dark .crt::after {
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
       rgba(0, 0, 0, 0.15) 2px,
       rgba(0, 0, 0, 0.15) 4px
     );
@@ -204,6 +216,8 @@
 
   .crt {
     animation: crt-flicker 4s infinite;
+  }
+  .dark .crt {
     text-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
   }
 
@@ -213,7 +227,7 @@
     margin-bottom: 0.75rem;
     font-size: 1.125rem;
     font-weight: 700;
-    color: white;
+    color: var(--foreground);
   }
 
   .prose-blog p {
@@ -221,7 +235,7 @@
   }
 
   .prose-blog strong {
-    color: white;
+    color: var(--foreground);
   }
 
   .prose-blog ol {
