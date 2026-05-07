@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Space_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { CommandPalette } from "@/components/ui/command-palette";
+import { MusicPlayer } from "@/components/ui/music-player";
+import { getAllPosts } from "@/lib/blog";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -36,12 +39,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let posts: ReturnType<typeof getAllPosts> = [];
+  try {
+    posts = getAllPosts();
+  } catch {
+    // content/blogs not yet populated
+  }
+
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark');}else{document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${spaceMono.variable} ${inter.variable} antialiased`}
       >
         {children}
+        <MusicPlayer />
+        <CommandPalette posts={posts} />
         <Analytics />
       </body>
     </html>
