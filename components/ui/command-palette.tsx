@@ -63,16 +63,29 @@ export function CommandPalette({ posts }: CommandPaletteProps) {
 
   return (
     <>
-      {/* Search trigger — sits left of ThemeToggle (right-4 + 40px + 8px gap = right-16) */}
+      {/* Search trigger */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Open command palette"
-        className="group fixed top-4 right-16 z-50 inline-flex h-10 items-center gap-2 border border-border bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="group fixed top-4 right-16 z-50 flex h-10 items-stretch overflow-hidden border border-border bg-background shadow-xs transition-colors hover:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       >
-        <Search className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-brand" />
-        <kbd className="font-space-mono text-[10px] text-muted-foreground transition-colors group-hover:text-brand">
-          ⌘K
-        </kbd>
+        {/* Icon + label */}
+        <span className="flex items-center gap-2 px-3">
+          <Search className="h-3.5 w-3.5 text-muted-foreground transition-colors group-hover:text-brand" />
+          <span className="hidden font-space-mono text-xs tracking-wide text-muted-foreground transition-colors group-hover:text-foreground sm:inline">
+            search
+          </span>
+        </span>
+
+        {/* Key caps zone */}
+        <span className="flex items-center gap-1 border-l border-border px-2.5 transition-colors group-hover:border-brand/40">
+          <kbd className="flex h-5 items-center justify-center border border-border bg-muted/40 px-1.5 font-space-mono text-[9px] text-muted-foreground transition-colors group-hover:border-brand/50 group-hover:text-brand">
+            ⌘
+          </kbd>
+          <kbd className="flex h-5 items-center justify-center border border-border bg-muted/40 px-1.5 font-space-mono text-[9px] text-muted-foreground transition-colors group-hover:border-brand/50 group-hover:text-brand">
+            K
+          </kbd>
+        </span>
       </button>
 
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
@@ -109,6 +122,18 @@ export function CommandPalette({ posts }: CommandPaletteProps) {
                 <Command.Empty className="py-8 text-center text-xs text-zinc-500">
                   no results found.
                 </Command.Empty>
+
+                {musicPlaying !== null && (
+                  <Command.Group>
+                    <GroupLabel>NOW PLAYING</GroupLabel>
+                    <PaletteItem
+                      icon={<Pause className="h-3.5 w-3.5" />}
+                      onSelect={pauseMusic}
+                    >
+                      Pause Music
+                    </PaletteItem>
+                  </Command.Group>
+                )}
 
                 <Command.Group>
                   <GroupLabel>NAVIGATE</GroupLabel>
@@ -152,14 +177,6 @@ export function CommandPalette({ posts }: CommandPaletteProps) {
 
                 <Command.Group>
                   <GroupLabel>MUSIC</GroupLabel>
-                  {musicPlaying !== null && (
-                    <PaletteItem
-                      icon={<Pause className="h-3.5 w-3.5" />}
-                      onSelect={pauseMusic}
-                    >
-                      Pause Music
-                    </PaletteItem>
-                  )}
                   <PaletteItem
                     icon={<Music className="h-3.5 w-3.5" />}
                     onSelect={() => playTrack(0)}
