@@ -165,18 +165,11 @@ export const workExperience: WorkExperience[] = [
 
 export const projects: Project[] = [
   {
-    title: "Prepify",
+    title: "Reels DeepAgents",
     description:
-      "RAG-powered job-search copilot. Résumé in, interviews out.",
-    tags: [
-      "React",
-      "TypeScript",
-      "OpenAI API",
-      "LangChain",
-      "Supabase",
-      "PostgreSQL",
-    ],
-    link: "https://github.com/PrEEtPatEl44/prepify",
+      "Multi-agent pipeline that scripts, scores, and stitches short-form reels.",
+    tags: ["Python", "DeepAgents", "LangGraph", "LLMs"],
+    link: "https://github.com/PrEEtPatEl44/reels-deepagents/",
   },
   {
     title: "Fragments",
@@ -217,12 +210,5 @@ export const projects: Project[] = [
       "Azure DevOps",
     ],
     link: "#",
-  },
-  {
-    title: "Reels DeepAgents",
-    description:
-      "Multi-agent pipeline that scripts, scores, and stitches short-form reels.",
-    tags: ["Python", "DeepAgents", "LangGraph", "LLMs"],
-    link: "https://github.com/PrEEtPatEl44/reels-deepagents/",
   },
 ];
