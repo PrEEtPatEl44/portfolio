@@ -5,9 +5,6 @@ import {
   Briefcase,
   GraduationCap,
   Github,
-  FileText,
-  Clock,
-  Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -29,7 +26,6 @@ import {
   projects,
   education,
 } from "@/data/data";
-import { getAllPosts } from "@/lib/blog";
 import { AccentPicker } from "@/components/ui/accent-picker";
 // import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { GitHubActivity } from "@/components/ui/github-activity";
@@ -291,57 +287,6 @@ export default function Home() {
                       }))}
                     />
                   </TerminalBox>
-                </StaggerItem>
-              ))}
-            </StaggerList>
-          </section>
-        </FadeIn>
-
-        {/* Blog Section */}
-        <FadeIn>
-          <section>
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-brand" />
-                <h2 className="font-space-mono text-lg tracking-wider text-brand">
-                  BLOG
-                </h2>
-              </div>
-              <Link
-                href="/blogs"
-                className="group/link inline-flex items-center gap-1 font-space-mono text-xs text-zinc-600 dark:text-zinc-400 transition-colors hover:text-brand"
-              >
-                <TextFlip>See all</TextFlip>
-                <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
-              </Link>
-            </div>
-
-            <StaggerList className="space-y-3">
-              {getAllPosts().slice(0, 2).map((post) => (
-                <StaggerItem key={post.slug}>
-                  <Link href={`/blogs/${post.slug}`} className="group block">
-                    <TerminalBox
-                      title={`~/blog/${post.slug}.md`}
-                      className="group-hover:border-brand/50"
-                    >
-                      <div className="mb-2 flex items-center gap-4 font-space-mono text-xs text-zinc-500">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {post.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {post.readTime}
-                        </span>
-                      </div>
-                      <h3 className="mb-1 font-space-mono text-sm font-medium text-foreground transition-colors group-hover:text-brand">
-                        {post.title}
-                      </h3>
-                      <p className="font-space-mono text-xs text-zinc-600 dark:text-zinc-400">
-                        {post.description}
-                      </p>
-                    </TerminalBox>
-                  </Link>
                 </StaggerItem>
               ))}
             </StaggerList>
