@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { ActivityCalendar, type Activity } from "react-activity-calendar";
 
 const GITHUB_USERNAME = "PrEEtPatEl44";
@@ -19,6 +19,25 @@ export function GitHubActivity() {
   const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(
     null,
   );
+  const [compact, setCompact] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Shrink the calendar on narrow viewports
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setCompact(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // Scroll to the most recent contributions once the calendar renders
+  useEffect(() => {
+    if (!data) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollLeft = el.scrollWidth;
+  }, [data, compact]);
 
   // Watch for accent changes
   useEffect(() => {
@@ -55,7 +74,7 @@ export function GitHubActivity() {
     };
   }, [brandColor]);
 
-  if (data === null) {
+  if (data === null || data.length === 0) {
     return (
       <div className="h-32 animate-pulse rounded bg-zinc-800/50" />
     );
@@ -63,37 +82,41 @@ export function GitHubActivity() {
 
   return (
     <>
-      <ActivityCalendar
-        data={data}
-        theme={colorCustomization()}
-        colorScheme="dark"
-        blockSize={12}
-        blockRadius={2}
-        blockMargin={3}
-        fontSize={12}
-        renderBlock={(block, activity) => {
-          const label = `${
-            activity.count === 0
-              ? "No"
-              : `${activity.count} contribution${
-                  activity.count === 1 ? "" : "s"
-                }`
-          } on ${activity.date}`;
-          return React.cloneElement(block, {
-            onMouseEnter: (e: React.MouseEvent) =>
-              setTip({ x: e.clientX, y: e.clientY, text: label }),
-            onMouseMove: (e: React.MouseEvent) =>
-              setTip((t) =>
-                t ? { ...t, x: e.clientX, y: e.clientY } : null,
-              ),
-            onMouseLeave: () => setTip(null),
-          });
-        }}
-        style={{
-          fontFamily: "var(--font-space-mono)",
-          color: "#a1a1aa", // zinc-400
-        }}
-      />
+      <div ref={scrollRef} className="no-scrollbar w-full overflow-x-auto">
+        <div className="w-fit mx-auto">
+          <ActivityCalendar
+            data={data}
+            theme={colorCustomization()}
+            colorScheme="dark"
+            blockSize={compact ? 9 : 12}
+            blockRadius={2}
+            blockMargin={compact ? 2 : 3}
+            fontSize={12}
+            renderBlock={(block, activity) => {
+              const label = `${
+                activity.count === 0
+                  ? "No"
+                  : `${activity.count} contribution${
+                      activity.count === 1 ? "" : "s"
+                    }`
+              } on ${activity.date}`;
+              return React.cloneElement(block, {
+                onMouseEnter: (e: React.MouseEvent) =>
+                  setTip({ x: e.clientX, y: e.clientY, text: label }),
+                onMouseMove: (e: React.MouseEvent) =>
+                  setTip((t) =>
+                    t ? { ...t, x: e.clientX, y: e.clientY } : null,
+                  ),
+                onMouseLeave: () => setTip(null),
+              });
+            }}
+            style={{
+              fontFamily: "var(--font-space-mono)",
+              color: "#a1a1aa", // zinc-400
+            }}
+          />
+        </div>
+      </div>
       {tip && (
         <div
           className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded border border-zinc-700 bg-black/90 px-2 py-1 font-space-mono text-xs whitespace-nowrap text-zinc-200 shadow-lg"

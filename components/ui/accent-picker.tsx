@@ -47,16 +47,20 @@ export function AccentPicker() {
 
       {/* Color circles */}
       <div
-        className={`flex h-10 items-center gap-2 border border-border bg-background px-3 shadow-xs transition-all ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`flex h-10 items-center gap-1 border border-border bg-background px-2 shadow-xs transition-all ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
         {accents.map((accent) => (
           <button
             key={accent.name}
             onClick={() => handleClick(accent)}
-            className={`h-4 w-4 rounded-full transition-transform hover:scale-125 ${active === accent.name ? "ring-2 ring-foreground ring-offset-1 ring-offset-background" : ""}`}
-            style={{ backgroundColor: accent.color }}
+            className="group/swatch flex h-8 w-8 items-center justify-center"
             aria-label={`Set accent to ${accent.name}`}
-          />
+          >
+            <span
+              className={`h-4 w-4 rounded-full transition-transform group-hover/swatch:scale-125 ${active === accent.name ? "ring-2 ring-foreground ring-offset-1 ring-offset-background" : ""}`}
+              style={{ backgroundColor: accent.color }}
+            />
+          </button>
         ))}
       </div>
     </div>

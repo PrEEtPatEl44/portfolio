@@ -74,11 +74,11 @@ export default function Home() {
       {/* Full-bleed hero */}
       <FadeIn>
         <section className="flex w-full justify-center px-6 pt-12 pb-8 sm:px-10 lg:px-16">
-          <div className="flex items-center gap-10">
+          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:gap-10 sm:text-left">
             {/* Pixel mascot */}
             <PixelMascot className="h-16 w-24" />
 
-            <div className="min-w-0 space-y-1 font-space-mono text-sm leading-relaxed">
+            <div className="w-full min-w-0 space-y-1 font-space-mono text-sm leading-relaxed">
               <div>
                 <SpecialText className="font-bold text-foreground">
                   Preet Codes
@@ -89,7 +89,7 @@ export default function Home() {
                 Espresso 4.7 with high jitters{" "}
                 <span className="text-zinc-400 dark:text-zinc-600">·</span> Imposter Syndrome Pro
               </div>
-              <div className="flex flex-wrap items-center gap-x-2 text-zinc-500">
+              <div className="flex flex-wrap items-center justify-center gap-x-2 text-zinc-500 sm:justify-start">
                 <span>~/portfolio</span>
                 {hero.socialLinks.map((link) => {
                   const Icon = link.icon;
@@ -104,7 +104,7 @@ export default function Home() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={link.name}
-                        className="inline-flex text-zinc-600 dark:text-zinc-400 transition-colors hover:text-brand"
+                        className="inline-flex items-center justify-center p-1.5 text-zinc-600 dark:text-zinc-400 transition-colors hover:text-brand"
                       >
                         <TextFlip>
                           <Icon className="h-3.5 w-3.5" />
@@ -148,7 +148,7 @@ export default function Home() {
               {workExperience.map((job) => (
                 <StaggerItem key={job.company}>
                   <TerminalBox title={`~/work/${slugify(job.company)}.sh`}>
-                    <div className="mb-2 flex items-start justify-between">
+                    <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h3 className="font-space-mono text-base font-medium text-foreground">
                           {job.role}
@@ -207,7 +207,7 @@ export default function Home() {
               {education.map((edu) => (
                 <StaggerItem key={edu.school}>
                   <TerminalBox title={`~/edu/${slugify(edu.school)}.sh`}>
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h3 className="font-space-mono text-base font-medium text-foreground">
                           {edu.program}
@@ -390,9 +390,7 @@ export default function Home() {
                 ACTIVITY
               </h2>
             </div>
-            <div className="no-scrollbar flex justify-center overflow-x-auto">
-              <GitHubActivity />
-            </div>
+            <GitHubActivity />
           </section>
         </FadeIn>
 
