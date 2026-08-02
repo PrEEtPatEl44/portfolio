@@ -4,7 +4,6 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { MusicPlayer } from "@/components/ui/music-player";
-import { getAllPosts } from "@/lib/blog";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -39,13 +38,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let posts: ReturnType<typeof getAllPosts> = [];
-  try {
-    posts = getAllPosts();
-  } catch {
-    // content/blogs not yet populated
-  }
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -60,7 +52,7 @@ export default function RootLayout({
       >
         {children}
         <MusicPlayer />
-        <CommandPalette posts={posts} />
+        <CommandPalette />
         <Analytics />
       </body>
     </html>

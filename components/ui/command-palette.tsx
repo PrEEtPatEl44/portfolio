@@ -7,20 +7,14 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   Home,
   Terminal,
-  FileText,
   Github,
   Linkedin,
   Music,
   Pause,
   Search,
 } from "lucide-react";
-import type { BlogPostMeta } from "@/lib/blog";
 
-interface CommandPaletteProps {
-  posts: BlogPostMeta[];
-}
-
-export function CommandPalette({ posts }: CommandPaletteProps) {
+export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState<number | null>(null);
   const router = useRouter();
@@ -67,7 +61,7 @@ export function CommandPalette({ posts }: CommandPaletteProps) {
       <button
         onClick={() => setOpen(true)}
         aria-label="Open command palette"
-        className="group fixed top-4 right-16 z-50 flex h-10 items-stretch overflow-hidden border border-border bg-background shadow-xs transition-colors hover:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="group fixed top-4 right-4 z-50 flex h-10 w-10 items-center justify-center overflow-hidden border border-border bg-background shadow-xs transition-colors hover:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:right-16 sm:w-auto sm:items-stretch sm:justify-start"
       >
         {/* Icon + label */}
         <span className="flex items-center gap-2 px-3">
@@ -77,8 +71,8 @@ export function CommandPalette({ posts }: CommandPaletteProps) {
           </span>
         </span>
 
-        {/* Key caps zone */}
-        <span className="flex items-center gap-1 border-l border-border px-2.5 transition-colors group-hover:border-brand/40">
+        {/* Key caps zone (hidden on mobile — no physical keyboard) */}
+        <span className="hidden items-center gap-1 border-l border-border px-2.5 transition-colors group-hover:border-brand/40 sm:flex">
           <kbd className="flex h-5 items-center justify-center border border-border bg-muted/40 px-1.5 font-space-mono text-[9px] text-muted-foreground transition-colors group-hover:border-brand/50 group-hover:text-brand">
             ⌘
           </kbd>
@@ -149,31 +143,7 @@ export function CommandPalette({ posts }: CommandPaletteProps) {
                   >
                     Projects
                   </PaletteItem>
-                  <PaletteItem
-                    icon={<FileText className="h-3.5 w-3.5" />}
-                    onSelect={() => run(() => router.push("/blogs"))}
-                  >
-                    Blog
-                  </PaletteItem>
                 </Command.Group>
-
-                {posts.length > 0 && (
-                  <Command.Group>
-                    <GroupLabel>POSTS</GroupLabel>
-                    {posts.map((post) => (
-                      <PaletteItem
-                        key={post.slug}
-                        icon={<FileText className="h-3.5 w-3.5" />}
-                        hint={post.date}
-                        onSelect={() =>
-                          run(() => router.push(`/blogs/${post.slug}`))
-                        }
-                      >
-                        {post.title}
-                      </PaletteItem>
-                    ))}
-                  </Command.Group>
-                )}
 
                 <Command.Group>
                   <GroupLabel>MUSIC</GroupLabel>
