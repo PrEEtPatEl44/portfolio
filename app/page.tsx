@@ -1,372 +1,326 @@
-import {
-  ArrowUpRight,
-  Terminal,
-  Cpu,
-  Briefcase,
-  GraduationCap,
-  Github,
-} from "lucide-react";
+import { ArrowUpRight, Github, Linkedin } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { TextFlip } from "@/components/ui/text-flip";
+import { SceneMount } from "@/components/three/scene-mount";
+import { SkillCloud } from "@/components/three/skill-cloud";
+import { DepthHud } from "@/components/three/depth-hud";
+import { CAT_LABEL, CAT_COLOR } from "@/lib/skill-categories";
 import { FadeIn } from "@/components/ui/fade-in";
-import { StaggerList, StaggerItem } from "@/components/ui/stagger-list";
-import { MagneticButton } from "@/components/ui/magnetic-button";
-import { TerminalBox, slugify } from "@/components/ui/terminal-box";
-import { BGPattern } from "@/components/ui/bg-pattern";
-import { ScrollProgress } from "@/components/ui/scroll-progress";
-import { SortableTags } from "@/components/ui/sortable-tags";
-import { PixelMascot } from "@/components/ui/pixel-mascot";
-import { SpecialText } from "@/components/ui/special-text";
-import {
-  hero,
-  skills,
-  workExperience,
-  projects,
-  education,
-} from "@/data/data";
+import { TextFlip } from "@/components/ui/text-flip";
 import { AccentPicker } from "@/components/ui/accent-picker";
-// import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { GitHubActivity } from "@/components/ui/github-activity";
-
-function getVersion(): string {
-  const dob = new Date(2004, 3, 4);
-  const now = new Date();
-
-  const beforeBday =
-    now.getMonth() < dob.getMonth() ||
-    (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate());
-  const age = now.getFullYear() - dob.getFullYear() - (beforeBday ? 1 : 0);
-
-  const lastBday = new Date(
-    beforeBday ? now.getFullYear() - 1 : now.getFullYear(),
-    dob.getMonth(),
-    dob.getDate(),
-  );
-  const daysSinceBday = Math.floor(
-    (now.getTime() - lastBday.getTime()) / 86_400_000,
-  );
-
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  return `v${age}.${month}.${daysSinceBday}`;
-}
+import { hero, workExperience, education, projects } from "@/data/data";
 
 export const revalidate = 3600;
 
 export default function Home() {
   return (
-    <div className="crt relative min-h-screen">
-      <BGPattern
-        variant="grid"
-        mask="fade-edges"
-        size={40}
-        fill="var(--grid-fill)"
+    <div className="relative min-h-screen bg-[#04050c] text-zinc-100">
+      <SceneMount />
+
+      {/* legibility veil between the 3D layer and the content */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-[1]"
+        style={{
+          background:
+            "linear-gradient(180deg,rgba(4,5,12,.55) 0%,rgba(4,5,12,.16) 30%,rgba(4,5,12,.16) 70%,rgba(4,5,12,.6) 100%)," +
+            "radial-gradient(ellipse at 50% 50%,rgba(4,5,12,.08) 18%,rgba(4,5,12,.72) 100%)",
+        }}
       />
-      <ScrollProgress />
+
       <AccentPicker />
-      {/* <ThemeToggle /> */}
+      <DepthHud />
 
-      {/* Full-bleed hero */}
-      <FadeIn>
-        <section className="flex w-full justify-center px-6 pt-12 pb-8 sm:px-10 lg:px-16">
-          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:gap-10 sm:text-left">
-            {/* Pixel mascot */}
-            <PixelMascot className="h-16 w-24" />
+      <main className="relative z-10">
+        {/* ENTRY */}
+        <section
+          id="entry"
+          className="mx-auto flex min-h-svh max-w-5xl flex-col justify-center gap-6 px-6 py-24 sm:px-10"
+        >
+          <FadeIn>
+            <h1 className="font-space-mono text-[clamp(48px,13vw,150px)] font-bold uppercase leading-[0.85] tracking-tighter [text-shadow:0_6px_60px_rgba(4,5,12,.95)]">
+              Preet
+              <span className="block text-transparent [-webkit-text-stroke:1px_rgba(200,214,240,.5)]">
+                Patel
+              </span>
+            </h1>
+          </FadeIn>
 
-            <div className="w-full min-w-0 space-y-1 font-space-mono text-sm leading-relaxed">
+          <FadeIn>
+            <p className="max-w-[34ch] font-space-mono text-base text-zinc-200 sm:text-lg [text-shadow:0_2px_22px_rgba(4,5,12,.95)]">
+              {hero.description}
+            </p>
+          </FadeIn>
+
+          <FadeIn>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-space-mono text-[11px] tracking-widest text-zinc-400 [text-shadow:0_2px_16px_rgba(4,5,12,.98)]">
+              <span>{hero.location.toUpperCase()}</span>
+              <span>
+                {workExperience[0].role.toUpperCase()}{" "}
+                <span className="text-[color:var(--brand)]">
+                  @ {workExperience[0].company.toUpperCase()}
+                </span>
+              </span>
+            </div>
+          </FadeIn>
+
+          <FadeIn>
+            <div className="flex flex-wrap gap-3 pt-2">
+              {hero.socialLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 border border-zinc-100/20 bg-[#0a0e1e]/50 px-4 py-3 font-space-mono text-[11px] tracking-widest text-zinc-200 backdrop-blur transition-colors hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <TextFlip>{link.name}</TextFlip>
+                  </a>
+                );
+              })}
+            </div>
+          </FadeIn>
+
+          <FadeIn>
+            <p className="pt-6 font-space-mono text-[10px] tracking-[0.2em] text-zinc-500">
+              SCROLL TO DESCEND
+            </p>
+          </FadeIn>
+        </section>
+
+        {/* DEPLOYMENT */}
+        <Section id="work" index="01" title="DEPLOYMENT">
+          <div className="border border-zinc-100/12 bg-[#0a0e1e]/55 p-6 backdrop-blur-md sm:p-9">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <SpecialText className="font-bold text-foreground">
-                  Preet Codes
-                </SpecialText>
-                <span className="text-zinc-500"> {getVersion()}</span>
-              </div>
-              <div className="hidden text-zinc-700 dark:text-zinc-300 sm:block">
-                Espresso 4.7 with high jitters{" "}
-                <span className="text-zinc-400 dark:text-zinc-600">·</span> Imposter Syndrome Pro
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-x-2 text-zinc-500 sm:justify-start">
-                <span>~/portfolio</span>
-                {hero.socialLinks.map((link) => {
-                  const Icon = link.icon;
-                  return (
-                    <span
-                      key={link.name}
-                      className="flex items-center gap-x-2"
-                    >
-                      <span className="text-zinc-400 dark:text-zinc-600">·</span>
-                      <a
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={link.name}
-                        className="inline-flex items-center justify-center p-1.5 text-zinc-600 dark:text-zinc-400 transition-colors hover:text-brand"
-                      >
-                        <TextFlip>
-                          <Icon className="h-3.5 w-3.5" />
-                        </TextFlip>
-                      </a>
-                    </span>
-                  );
-                })}
-              </div>
-              <div className="text-zinc-500">
-                {hero.location} <span className="text-zinc-400 dark:text-zinc-600">·</span>{" "}
-                {workExperience[0].role} @{" "}
+                <h3 className="font-space-mono text-xl font-bold sm:text-2xl">
+                  {workExperience[0].role}
+                </h3>
                 <a
                   href={workExperience[0].link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-zinc-600 dark:text-zinc-400 underline-offset-4 transition-colors hover:text-brand hover:underline"
+                  className="group/link inline-flex items-center gap-1 font-space-mono text-xs tracking-wider text-[color:var(--brand)]"
                 >
-                  {workExperience[0].company}
+                  <TextFlip>{workExperience[0].company.toUpperCase()}</TextFlip>
+                  <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
                 </a>
               </div>
-            </div>
-          </div>
-        </section>
-      </FadeIn>
-
-      <main className="mx-auto max-w-3xl space-y-12 px-6 pb-12 sm:px-8">
-        {/* Work Section */}
-        <FadeIn>
-          <section>
-            {/* Section header */}
-            <div className="mb-5 flex items-center gap-3">
-              <Briefcase className="h-5 w-5 text-brand" />
-              <h2 className="font-space-mono text-lg tracking-wider text-brand">
-                WORK
-              </h2>
+              <span className="font-space-mono text-[11px] tracking-wider text-zinc-500 tabular-nums">
+                {workExperience[0].period.toUpperCase()}
+              </span>
             </div>
 
-            {/* Work experience list */}
-            <StaggerList className="space-y-3">
-              {workExperience.map((job) => (
-                <StaggerItem key={job.company}>
-                  <TerminalBox title={`~/work/${slugify(job.company)}.sh`}>
-                    <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h3 className="font-space-mono text-base font-medium text-foreground">
-                          {job.role}
-                        </h3>
-                        <a
-                          href={job.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group/link inline-flex items-center gap-1 font-space-mono text-xs text-brand transition-colors hover:text-brand/80"
-                        >
-                          <TextFlip>{job.company}</TextFlip>
-                          <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
-                        </a>
-                      </div>
-                      <span className="font-space-mono text-xs text-zinc-500">
-                        {job.period}
-                      </span>
-                    </div>
+            <p className="my-5 max-w-[58ch] font-space-mono text-sm leading-relaxed text-zinc-400">
+              {workExperience[0].description}
+            </p>
 
-                    <p className="mb-3 font-space-mono text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
-                      {job.description}
-                    </p>
-
-                    <SortableTags
-                      className="flex flex-wrap gap-2"
-                      items={job.tags.map((tag) => ({
-                        key: tag,
-                        node: (
-                          <Badge
-                            variant="outline"
-                            className="rounded border-zinc-300 dark:border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-600 dark:text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-800 dark:hover:text-zinc-300"
-                          >
-                            <TextFlip>{tag}</TextFlip>
-                          </Badge>
-                        ),
-                      }))}
-                    />
-                  </TerminalBox>
-                </StaggerItem>
-              ))}
-            </StaggerList>
-          </section>
-        </FadeIn>
-
-        {/* Education Section */}
-        <FadeIn>
-          <section>
-            <div className="mb-5 flex items-center gap-3">
-              <GraduationCap className="h-5 w-5 text-brand" />
-              <h2 className="font-space-mono text-lg tracking-wider text-brand">
-                EDUCATION
-              </h2>
-            </div>
-
-            <StaggerList className="space-y-3">
-              {education.map((edu) => (
-                <StaggerItem key={edu.school}>
-                  <TerminalBox title={`~/edu/${slugify(edu.school)}.sh`}>
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h3 className="font-space-mono text-base font-medium text-foreground">
-                          {edu.program}
-                        </h3>
-                        {edu.link ? (
-                          <a
-                            href={edu.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group/link inline-flex items-center gap-1 font-space-mono text-xs text-brand transition-colors hover:text-brand/80"
-                          >
-                            <TextFlip>{edu.school}</TextFlip>
-                            <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
-                          </a>
-                        ) : (
-                          <span className="font-space-mono text-xs text-brand">
-                            {edu.school}
-                          </span>
-                        )}
-                      </div>
-                      <span className="font-space-mono text-xs text-zinc-500">
-                        {edu.period}
-                      </span>
-                    </div>
-                  </TerminalBox>
-                </StaggerItem>
-              ))}
-            </StaggerList>
-          </section>
-        </FadeIn>
-
-        {/* Projects Section */}
-        <FadeIn>
-          <section>
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Terminal className="h-5 w-5 text-brand" />
-                <h2 className="font-space-mono text-lg tracking-wider text-brand">
-                  PROJECTS
-                </h2>
-              </div>
-              <Link
-                href="/projects"
-                className="group/link inline-flex items-center gap-1 font-space-mono text-xs text-zinc-600 dark:text-zinc-400 transition-colors hover:text-brand"
-              >
-                <TextFlip>See all</TextFlip>
-                <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
-              </Link>
-            </div>
-
-            <StaggerList className="space-y-3">
-              {projects.slice(0, 2).map((project) => (
-                <StaggerItem key={project.title}>
-                  <TerminalBox
-                    title={`~/projects/${slugify(project.title)}.sh`}
-                  >
-                    <a
-                      href={project.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group/link mb-1 inline-flex items-center gap-1 font-space-mono text-sm font-medium text-foreground transition-colors hover:text-brand"
-                    >
-                      <TextFlip>{project.title}</TextFlip>
-                      <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover/link:opacity-100" />
-                    </a>
-                    <p className="mb-3 font-space-mono text-xs text-zinc-600 dark:text-zinc-400">
-                      {project.description}
-                    </p>
-                    <SortableTags
-                      className="flex flex-wrap gap-2"
-                      items={project.tags.map((tag) => ({
-                        key: tag,
-                        node: (
-                          <Badge
-                            variant="outline"
-                            className="rounded border-zinc-300 dark:border-zinc-700 bg-transparent font-space-mono text-xs text-zinc-600 dark:text-zinc-400 transition-colors hover:border-brand/50 hover:text-zinc-800 dark:hover:text-zinc-300"
-                          >
-                            <TextFlip>{tag}</TextFlip>
-                          </Badge>
-                        ),
-                      }))}
-                    />
-                  </TerminalBox>
-                </StaggerItem>
-              ))}
-            </StaggerList>
-          </section>
-        </FadeIn>
-
-        {/* Skills Section */}
-        <FadeIn>
-          <section>
-            {/* Section header */}
-            <div className="mb-5 flex items-center gap-3">
-              <Cpu className="h-5 w-5 text-brand" />
-              <h2 className="font-space-mono text-lg tracking-wider text-brand">
-                SKILLS
-              </h2>
-            </div>
-
-            {/* Skills badges */}
-            <SortableTags
-              className="flex flex-wrap justify-center gap-3"
-              items={skills.map((skill) => {
-                const Icon = skill.icon;
-                return {
-                  key: skill.name,
-                  node: (
-                    <Badge
-                      variant="outline"
-                      className="gap-2 rounded border-zinc-300 dark:border-zinc-700 bg-transparent px-2.5 py-1.5 font-space-mono text-xs text-zinc-700 dark:text-zinc-300 transition-colors hover:border-brand/50 hover:text-white"
-                    >
-                      <Icon className="h-4 w-4 text-brand" />
-                      <TextFlip>{skill.name}</TextFlip>
-                    </Badge>
-                  ),
-                };
-              })}
-            />
-          </section>
-        </FadeIn>
-
-        {/* Activity Section */}
-        <FadeIn>
-          <section>
-            <div className="mb-5 flex items-center gap-3">
-              <Github className="h-5 w-5 text-brand" />
-              <h2 className="font-space-mono text-lg tracking-wider text-brand">
-                ACTIVITY
-              </h2>
-            </div>
-            <GitHubActivity />
-          </section>
-        </FadeIn>
-
-        {/* CTA Section */}
-        <FadeIn>
-          <section>
-            <div className="flex flex-col items-center justify-center px-8 py-6 text-center">
-              <h2 className="mb-3 font-space-mono text-xl font-bold text-foreground sm:text-2xl">
-                Let&apos;s work together.
-              </h2>
-              <p className="mb-6 max-w-md font-space-mono text-xs text-zinc-600 dark:text-zinc-400">
-                Currently open for new opportunities and interesting projects.
-              </p>
-              <MagneticButton className="inline-block">
-                <Button
-                  className="bg-brand font-space-mono text-white hover:bg-brand/90"
-                  asChild
+            <div className="flex flex-wrap gap-2">
+              {workExperience[0].tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="border border-zinc-100/12 px-2.5 py-1 font-space-mono text-[11px] text-zinc-400"
                 >
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            {education.map((edu) => (
+              <div
+                key={edu.school}
+                className="mt-6 flex flex-col gap-1 border-t border-zinc-100/12 pt-5 sm:flex-row sm:items-start sm:justify-between"
+              >
+                <div>
+                  <h4 className="font-space-mono text-base font-bold">
+                    {edu.program}
+                  </h4>
                   <a
-                    href={hero.socialLinks[1].href}
+                    href={edu.link}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="font-space-mono text-xs tracking-wider text-[color:var(--brand)]"
                   >
-                    <TextFlip>Get in Touch</TextFlip>
+                    {edu.school.toUpperCase()}
                   </a>
-                </Button>
-              </MagneticButton>
+                </div>
+                <span className="font-space-mono text-[11px] tracking-wider text-zinc-500 tabular-nums">
+                  {edu.period.toUpperCase()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* ARTIFACTS */}
+        <Section id="artifacts" index="02" title="ARTIFACTS">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {projects.map((project, i) => (
+              <article
+                key={project.title}
+                className="group flex flex-col gap-3 border border-zinc-100/12 bg-[#0a0e1e]/55 p-6 backdrop-blur-md transition-colors hover:border-[color:var(--brand)]/45"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-space-mono text-[10px] tracking-[0.16em] text-[color:var(--brand)]">
+                    A-{String(i + 1).padStart(2, "0")}
+                  </span>
+                  {project.featured && (
+                    <span className="font-space-mono text-[9px] tracking-[0.12em] text-[#9d7bff]">
+                      FEATURED
+                    </span>
+                  )}
+                </div>
+
+                {project.link && project.link !== "#" ? (
+                  <a
+                    href={project.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group/link inline-flex items-center gap-1 font-space-mono text-lg font-bold transition-colors hover:text-[color:var(--brand)]"
+                  >
+                    <TextFlip>{project.title}</TextFlip>
+                    <ArrowUpRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover/link:opacity-100" />
+                  </a>
+                ) : (
+                  <h3 className="font-space-mono text-lg font-bold">
+                    {project.title}
+                  </h3>
+                )}
+
+                <p className="flex-1 font-space-mono text-[13px] leading-relaxed text-zinc-400">
+                  {project.description}
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {project.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="border border-zinc-100/12 px-2 py-1 font-space-mono text-[10px] text-zinc-500"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </Section>
+
+        {/* EMBEDDING */}
+        <Section id="embedding" index="03" title="EMBEDDING">
+          <div className="grid items-center gap-8 border border-zinc-100/12 bg-[#0a0e1e]/70 p-5 backdrop-blur-md sm:p-8 lg:grid-cols-[1fr_240px]">
+            <SkillCloud />
+            <div className="flex flex-col gap-3">
+              {CAT_LABEL.map((label, i) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2.5 font-space-mono text-[11px] tracking-wider text-zinc-400"
+                >
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ background: CAT_COLOR[i] }}
+                  />
+                  {label.toUpperCase()}
+                </div>
+              ))}
+              <p className="mt-2 border-t border-zinc-100/12 pt-4 font-space-mono text-[10px] leading-loose tracking-wider text-zinc-600">
+                24 VECTORS PROJECTED
+                <br />
+                DRAG TO ROTATE THE MANIFOLD
+              </p>
             </div>
-          </section>
-        </FadeIn>
+          </div>
+        </Section>
+
+        {/* ACTIVITY */}
+        <Section id="activity" index="04" title="ACTIVITY">
+          <div className="border border-zinc-100/12 bg-[#0a0e1e]/55 p-5 backdrop-blur-md sm:p-7">
+            <GitHubActivity />
+          </div>
+        </Section>
+
+        {/* EXIT */}
+        <section
+          id="exit"
+          className="mx-auto flex min-h-[80svh] max-w-5xl flex-col items-center justify-center gap-8 px-6 py-24 text-center sm:px-10"
+        >
+          <FadeIn>
+            <p className="font-space-mono text-[10px] tracking-[0.2em] text-[color:var(--brand)]">
+              05 &mdash; EXIT
+            </p>
+          </FadeIn>
+          <FadeIn>
+            <h2 className="font-space-mono text-[clamp(34px,8vw,90px)] font-bold uppercase leading-[0.88] tracking-tighter">
+              Let&apos;s build
+              <br />
+              something
+            </h2>
+          </FadeIn>
+          <FadeIn>
+            <div className="flex flex-wrap justify-center gap-3">
+              <a
+                href={hero.socialLinks[0].href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 border border-[color:var(--brand)] bg-[color:var(--brand)] px-6 py-4 font-space-mono text-[11px] tracking-widest text-[#160d02] transition-opacity hover:opacity-90"
+              >
+                <Github className="h-4 w-4" />
+                GITHUB
+              </a>
+              <a
+                href={hero.socialLinks[1].href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 border border-zinc-100/25 bg-[#0a0e1e]/50 px-6 py-4 font-space-mono text-[11px] tracking-widest text-zinc-200 backdrop-blur transition-colors hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
+              >
+                <Linkedin className="h-4 w-4" />
+                LINKEDIN
+              </a>
+            </div>
+          </FadeIn>
+          <FadeIn>
+            <Link
+              href="/projects"
+              className="font-space-mono text-[11px] tracking-widest text-zinc-500 underline-offset-4 transition-colors hover:text-[color:var(--brand)] hover:underline"
+            >
+              SEE ALL PROJECTS
+            </Link>
+          </FadeIn>
+        </section>
+
+        <footer className="pb-12 text-center font-space-mono text-[10px] tracking-widest text-zinc-600">
+          &copy; 2026 PREET PATEL &mdash; RENDERED IN REAL TIME WITH THREE.JS
+        </footer>
       </main>
     </div>
+  );
+}
+
+function Section({
+  id,
+  index,
+  title,
+  children,
+}: {
+  id: string;
+  index: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className="mx-auto max-w-5xl px-6 py-24 sm:px-10 sm:py-32">
+      <FadeIn>
+        <div className="mb-7 flex items-center gap-3">
+          <p className="font-space-mono text-[10px] tracking-[0.2em] text-[color:var(--brand)]">
+            {index} &mdash; {title}
+          </p>
+          <span className="h-px flex-1 bg-gradient-to-r from-zinc-100/15 to-transparent" />
+        </div>
+      </FadeIn>
+      <FadeIn>{children}</FadeIn>
+    </section>
   );
 }
