@@ -11,13 +11,18 @@ import {
   Linkedin,
   Music,
   Pause,
-  Search,
 } from "lucide-react";
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState<number | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener("portfolio:commands", show);
+    return () => window.removeEventListener("portfolio:commands", show);
+  }, []);
 
   // ⌘K / Ctrl+K shortcut
   useEffect(() => {
@@ -57,30 +62,6 @@ export function CommandPalette() {
 
   return (
     <>
-      {/* Search trigger */}
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Open command palette"
-        className="group fixed top-4 right-4 z-50 flex h-10 w-10 items-center justify-center overflow-hidden border border-border bg-background shadow-xs transition-colors hover:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:right-16 sm:w-auto sm:items-stretch sm:justify-start"
-      >
-        {/* Icon + label */}
-        <span className="flex items-center gap-2 px-3">
-          <Search className="h-3.5 w-3.5 text-muted-foreground transition-colors group-hover:text-brand" />
-          <span className="hidden font-space-mono text-xs tracking-wide text-muted-foreground transition-colors group-hover:text-foreground sm:inline">
-            search
-          </span>
-        </span>
-
-        {/* Key caps zone (hidden on mobile — no physical keyboard) */}
-        <span className="hidden items-center gap-1 border-l border-border px-2.5 transition-colors group-hover:border-brand/40 sm:flex">
-          <kbd className="flex h-5 items-center justify-center border border-border bg-muted/40 px-1.5 font-space-mono text-[9px] text-muted-foreground transition-colors group-hover:border-brand/50 group-hover:text-brand">
-            ⌘
-          </kbd>
-          <kbd className="flex h-5 items-center justify-center border border-border bg-muted/40 px-1.5 font-space-mono text-[9px] text-muted-foreground transition-colors group-hover:border-brand/50 group-hover:text-brand">
-            K
-          </kbd>
-        </span>
-      </button>
 
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
         <DialogPrimitive.Portal>
@@ -139,7 +120,10 @@ export function CommandPalette() {
                   </PaletteItem>
                   <PaletteItem
                     icon={<Terminal className="h-3.5 w-3.5" />}
-                    onSelect={() => run(() => router.push("/projects"))}
+                    onSelect={() => run(() => {
+                      router.push("/#projects");
+                      window.dispatchEvent(new CustomEvent("portfolio:zoom", { detail: "projects" }));
+                    })}
                   >
                     Projects
                   </PaletteItem>

@@ -13,7 +13,7 @@ export function ScrollProgress() {
   return (
     <motion.div
       style={{ scaleX }}
-      className="sticky top-0 z-50 h-1 w-full origin-left bg-brand"
+      className="portfolio-global-control fixed top-0 left-0 z-50 h-1 w-full origin-left bg-brand"
     />
   );
 }

@@ -72,7 +72,7 @@ export interface Project {
 export const hero: Hero = {
   name: "PREET PATEL",
   location: "Toronto, Ontario",
-  position: "Software Developer @ FGF Brands",
+  position: "AI Operations Developer @ Docebo",
   description: "Shipping agents before they ship me.",
   socialLinks: [
     {
@@ -126,9 +126,18 @@ export const education: Education[] = [
 
 export const workExperience: WorkExperience[] = [
   {
+    company: "Docebo",
+    role: "AI Operations Developer",
+    period: "May 2026 - Present",
+    description:
+      "Keeping AI agents running in production — evals, monitoring, and the plumbing in between.",
+    tags: [],
+    link: "https://www.docebo.com",
+  },
+  {
     company: "FGF Brands",
     role: "Software Developer Intern",
-    period: "Sept. 2024 - May 2025, Jan. 2026 - Present",
+    period: "Sept. 2024 - May 2025, Jan. 2026 - Apr. 2026",
     description:
       "Shipping Internal AI tools with AI tools at light speed.",
     tags: [
