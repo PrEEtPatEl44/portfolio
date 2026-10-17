@@ -13,6 +13,23 @@ export function AccentPicker() {
   const [active, setActive] = useState("orange");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const show = () => {
+      setOpen(true);
+      triggerRef.current?.focus();
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("portfolio:accent", show);
+    window.addEventListener("keydown", escape);
+    return () => {
+      window.removeEventListener("portfolio:accent", show);
+      window.removeEventListener("keydown", escape);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -31,9 +48,10 @@ export function AccentPicker() {
   }
 
   return (
-    <div ref={ref} className="fixed top-4 left-4 z-50 flex items-center gap-2">
+    <div ref={ref} className="portfolio-global-control fixed top-4 left-4 z-50 flex items-center gap-2">
       {/* Palette icon button */}
       <button
+        ref={triggerRef}
         onClick={() => setOpen((v) => !v)}
         className={`group relative inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-none
          border border-border bg-background text-sm font-medium shadow-xs transition-colors hover:border-brand
@@ -41,12 +59,16 @@ export function AccentPicker() {
            open ? "border-brand" : ""
          }`}
         aria-label="Toggle accent picker"
+        aria-expanded={open}
+        aria-controls="accent-swatches"
       >
         <Palette className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-brand" />
       </button>
 
       {/* Color circles */}
       <div
+        id="accent-swatches"
+        inert={!open}
         className={`flex h-10 items-center gap-1 border border-border bg-background px-2 shadow-xs transition-all ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
         {accents.map((accent) => (
@@ -55,6 +77,7 @@ export function AccentPicker() {
             onClick={() => handleClick(accent)}
             className="group/swatch flex h-8 w-8 items-center justify-center"
             aria-label={`Set accent to ${accent.name}`}
+            aria-pressed={active === accent.name}
           >
             <span
               className={`h-4 w-4 rounded-full transition-transform group-hover/swatch:scale-125 ${active === accent.name ? "ring-2 ring-foreground ring-offset-1 ring-offset-background" : ""}`}

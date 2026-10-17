@@ -13,7 +13,27 @@ function getBrandColor(): string {
     .trim();
 }
 
-export function GitHubActivity() {
+function getStats(data: Activity[]) {
+  let longest = 0;
+  let run = 0;
+  for (const day of data) {
+    run = day.count > 0 ? run + 1 : 0;
+    longest = Math.max(longest, run);
+  }
+  // Today may simply not have commits yet, so the streak can still be alive from yesterday.
+  let current = 0;
+  const end = data.at(-1)?.count === 0 ? data.length - 2 : data.length - 1;
+  for (let i = end; i >= 0 && data[i].count > 0; i--) current++;
+  return [
+    ["contributions", data.reduce((total, day) => total + day.count, 0)],
+    ["active days", data.filter((day) => day.count > 0).length],
+    ["longest streak", `${longest}d`],
+    ["current streak", `${current}d`],
+  ] as const;
+}
+
+/** `fit` sizes the calendar to its container instead of scrolling, and adds streak stats. */
+export function GitHubActivity({ fit = false }: { fit?: boolean }) {
   const [data, setData] = useState<Activity[] | null>(null);
   const [brandColor, setBrandColor] = useState<string>("oklch(0.65 0.2 41)");
   const [tip, setTip] = useState<{ x: number; y: number; text: string } | null>(
@@ -21,6 +41,15 @@ export function GitHubActivity() {
   );
   const [compact, setCompact] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [fitWidth, setFitWidth] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!fit || !el) return;
+    const observer = new ResizeObserver(([entry]) => setFitWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fit, data]);
 
   // Shrink the calendar on narrow viewports
   useEffect(() => {
@@ -80,6 +109,9 @@ export function GitHubActivity() {
     );
   }
 
+  // 53 weeks across, 2px gaps: the largest square that fits the tile.
+  const fitBlock = Math.max(4, Math.min(12, Math.floor(fitWidth / 53) - 2));
+
   return (
     <>
       <div ref={scrollRef} className="no-scrollbar w-full overflow-x-auto">
@@ -88,10 +120,12 @@ export function GitHubActivity() {
             data={data}
             theme={colorCustomization()}
             colorScheme="dark"
-            blockSize={compact ? 9 : 12}
+            blockSize={fit ? fitBlock : compact ? 9 : 12}
             blockRadius={2}
-            blockMargin={compact ? 2 : 3}
-            fontSize={12}
+            blockMargin={fit ? 2 : compact ? 2 : 3}
+            fontSize={fit ? 10 : 12}
+            showColorLegend={!fit}
+            showTotalCount={!fit}
             renderBlock={(block, activity) => {
               const label = `${
                 activity.count === 0
@@ -117,6 +151,11 @@ export function GitHubActivity() {
           />
         </div>
       </div>
+      {fit && (
+        <dl className="activity-stats">
+          {getStats(data).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+        </dl>
+      )}
       {tip && (
         <div
           className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded border border-zinc-700 bg-black/90 px-2 py-1 font-space-mono text-xs whitespace-nowrap text-zinc-200 shadow-lg"
