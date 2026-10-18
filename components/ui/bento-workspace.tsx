@@ -228,6 +228,16 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
   return (
     <BentoContext.Provider value={{ ready: complete, focused, zoomed, focus, toggleZoom }}>
     <section ref={rootRef} aria-labelledby="workspace-heading" className="bento" data-startup={frame.phase} data-instant={frame.instant ? "true" : undefined} data-resolving={resolving || undefined}>
+      {!complete && (
+        <div className="bento-startup-skip" data-nosnippet>
+          <button type="button" onClick={() => {
+            finish();
+            requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+          }} aria-label="Skip startup animation">
+            skip intro <kbd aria-hidden="true">esc</kbd>
+          </button>
+        </div>
+      )}
       <header className="bento-bar" aria-label="Workspace status">
         <span className="bento-bar-session">[portfolio]</span>
         <span className="bento-bar-window">0:main*</span>
@@ -248,9 +258,9 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
           </div>
         </section>
 
-        <div className="bento-editor">
+        <div className="bento-editor" data-nosnippet>
           <header className="bento-editor-chrome">
-            <h1 id="workspace-heading" className="bento-title"><span className="text-brand" aria-hidden="true">❯</span><span className="bento-title-name">Preet Codes</span><span className="bento-title-path">/ portfolio</span></h1>
+            <h1 id="workspace-heading" className="bento-title"><span className="text-brand" aria-hidden="true">❯</span><span className="bento-title-name">Preet Patel</span><span className="bento-title-path">/ portfolio</span></h1>
             <span className="bento-version"><time dateTime={today}>{today.replaceAll("-", ".")}</time><abbr title="Coordinated Universal Time" className="bento-utc">UTC</abbr></span>
           </header>
           <div className="bento-session cc">
@@ -287,7 +297,7 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
             </form>
             <div className="cc-footer">
               <span aria-hidden="true">⏵⏵ accept edits on</span>
-              {complete ? <span aria-hidden="true">⎇ main · ~/portfolio</span> : <button type="button" onClick={finish} className="cc-skip">skip intro <span aria-hidden="true">[esc]</span></button>}
+              {complete ? <span aria-hidden="true">⎇ main · ~/portfolio</span> : <span aria-hidden="true">esc to skip intro</span>}
             </div>
           </div>
           <p role="status" className="bento-message">{complete ? message : " "}</p>
@@ -301,7 +311,7 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
       </div>
 
       {introducing && (
-        <div className="bento-stage" aria-hidden="true">
+        <div className="bento-stage" aria-hidden="true" data-nosnippet>
           <div className="bento-stage-head">
             <p ref={stageNameRef} className="bento-stage-name">{firstName}<br /><span className="text-brand">{rest.join(" ")}</span></p>
           </div>
