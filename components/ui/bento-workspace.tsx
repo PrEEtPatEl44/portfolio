@@ -228,6 +228,16 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
   return (
     <BentoContext.Provider value={{ ready: complete, focused, zoomed, focus, toggleZoom }}>
     <section ref={rootRef} aria-labelledby="workspace-heading" className="bento" data-startup={frame.phase} data-instant={frame.instant ? "true" : undefined} data-resolving={resolving || undefined}>
+      {!complete && (
+        <div className="bento-startup-skip" data-nosnippet>
+          <button type="button" onClick={() => {
+            finish();
+            requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+          }} aria-label="Skip startup animation">
+            skip intro <kbd aria-hidden="true">esc</kbd>
+          </button>
+        </div>
+      )}
       <header className="bento-bar" aria-label="Workspace status">
         <span className="bento-bar-session">[portfolio]</span>
         <span className="bento-bar-window">0:main*</span>
@@ -287,7 +297,7 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
             </form>
             <div className="cc-footer">
               <span aria-hidden="true">⏵⏵ accept edits on</span>
-              {complete ? <span aria-hidden="true">⎇ main · ~/portfolio</span> : <button type="button" onClick={finish} className="cc-skip">skip intro <span aria-hidden="true">[esc]</span></button>}
+              {complete ? <span aria-hidden="true">⎇ main · ~/portfolio</span> : <span aria-hidden="true">esc to skip intro</span>}
             </div>
           </div>
           <p role="status" className="bento-message">{complete ? message : " "}</p>

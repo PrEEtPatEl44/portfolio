@@ -1244,8 +1244,28 @@
   }
 
   .cc-footer span:first-child { color: color-mix(in oklch, var(--brand) 80%, var(--muted-foreground)); }
-  .cc-skip { color: var(--muted-foreground); font-size: 9px; }
-  .cc-skip:hover, .cc-skip:focus-visible { color: var(--brand); outline: none; }
+  .bento-startup-skip {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    z-index: 60;
+  }
+  .bento-startup-skip button {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--background);
+    color: var(--foreground);
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .bento-startup-skip button:hover { border-color: var(--brand); color: var(--brand); }
+  .bento-startup-skip button:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
+  .bento-startup-skip kbd { color: var(--muted-foreground); font: inherit; font-size: 9px; }
 
   /* ── oculus + keys tile (reuses the workspace rail) ── */
   .bento-oculus { grid-area: oculus; padding: 14px 16px; }
