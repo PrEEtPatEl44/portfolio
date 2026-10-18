@@ -1539,6 +1539,12 @@
   }
 
   .tracking-eye-beam { animation: tracking-eye-beam 600ms linear infinite; }
+  /* The oculus blinks on its own: its lids squeeze shut and reopen every few seconds. */
+  .tracking-eye-panel .tracking-eye-lid {
+    transform-box: view-box;
+    transform-origin: 100px 60px;
+    animation: tracking-eye-blink 6.5s ease-in-out 2s infinite;
+  }
   .tracking-eye-beam-origin { transform-box: fill-box; transform-origin: center; animation: tracking-eye-ping 1.2s ease-out infinite; }
 }
 
@@ -1550,6 +1556,7 @@
 @keyframes deck-progress { to { width: 100%; } }
 @keyframes bento-eye-open { 0% { transform: scaleY(0.04); } 32%, 66% { transform: scaleY(1); } 72% { transform: scaleY(0.06); } 78%, 100% { transform: scaleY(1); } }
 @keyframes tracking-eye-beam { to { stroke-dashoffset: -9; } }
+@keyframes tracking-eye-blink { 0%, 92%, 100% { transform: scaleY(1); } 94% { transform: scaleY(0.06); } 96% { transform: scaleY(1); } }
 @keyframes tracking-eye-ping { 50% { opacity: 0.35; transform: scale(1.8); } }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1558,6 +1565,7 @@
   .deck-progress,
   .bento-stage-eye .tracking-eye-lid,
   .tracking-eye-beam,
+  .tracking-eye-panel .tracking-eye-lid,
   .tracking-eye-beam-origin {
     animation: none !important;
   }
