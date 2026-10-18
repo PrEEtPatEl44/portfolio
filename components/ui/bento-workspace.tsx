@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowUpRight, GitBranch, RotateCcw } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { BentoContext, ZOOMABLE_TILES } from "@/components/ui/bento-tile";
-import { EyeDrawing } from "@/components/ui/tracking-eye";
 import { WorkspaceRail, WORKSPACE_SHORTCUTS } from "@/components/ui/workspace-rail";
 import { useWorkspaceStartup } from "@/components/ui/use-workspace-startup";
 import { LAUNCH_COMMAND, OPEN_COMMAND } from "@/lib/workspace-startup";
@@ -21,14 +20,15 @@ type WorkspaceIntro = {
 const FLIGHT_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 const SECTIONS = ["projects", "work", "education", "contact", "skills", "activity"];
 
-function highlightCode(line: string, links: WorkspaceIntro["links"], interactive: boolean) {
-  return line.split(/("(?:[^"\\]|\\.)*(?:"|$)|\/\/.*$|\bconst\b)/g).map((token, index) => {
-    const link = links.find((item) => token === JSON.stringify(item.href));
-    return link ? (
-      <a key={index} href={link.href} target="_blank" rel="noopener noreferrer" tabIndex={interactive ? 0 : -1} aria-label={`${link.name} profile`} className="workspace-source-link">{token}</a>
-    ) : (
-      <span key={index} className={token.startsWith("//") ? "workspace-comment" : token.startsWith('"') ? "workspace-string" : token === "const" ? "workspace-keyword" : undefined}>{token}</span>
-    );
+const TOOLS = /^(Read|Write|Update|Bash)$/;
+
+/** One transcript line, styled like a Claude Code session; finished URLs become links. */
+function renderTranscriptLine(line: string, links: WorkspaceIntro["links"], interactive: boolean) {
+  return line.split(/(https?:\/\/\S+|⏺|⎿|✓|\b(?:Read|Write|Update|Bash)(?=\())/g).map((token, index) => {
+    const link = links.find((item) => token === item.href);
+    if (link) return <a key={index} href={link.href} target="_blank" rel="noopener noreferrer" tabIndex={interactive ? 0 : -1} aria-label={`${link.name} profile`} className="workspace-source-link">{token}</a>;
+    const className = token === "⏺" ? "cc-dot" : token === "⎿" ? "cc-dim" : token === "✓" ? "cc-ok" : TOOLS.test(token) ? "cc-tool" : undefined;
+    return <span key={index} className={className}>{token}</span>;
   });
 }
 
@@ -67,33 +67,38 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
   const [zoomed, setZoomed] = useState<string | null>(null);
   const rootRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const titleNameRef = useRef<HTMLSpanElement>(null);
-  const stageEyeRef = useRef<HTMLDivElement>(null);
-  const stageNameRef = useRef<HTMLSpanElement>(null);
+  const sessionRef = useRef<HTMLDivElement>(null);
+  const stageNameRef = useRef<HTMLParagraphElement>(null);
+  const stagePromptRef = useRef<HTMLDivElement>(null);
   const today = useUtcDate(intro.today);
   const clock = useTorontoClock();
 
+  // What Claude "does" after `> build me a portfolio`.
   const lines = useMemo(() => [
-    "// a little context before the code.",
-    "const preet = {",
-    `  name: ${JSON.stringify(intro.name)},`,
-    `  role: ${JSON.stringify(intro.role)},`,
-    `  at: ${JSON.stringify(intro.company)},`,
-    `  basedIn: ${JSON.stringify(intro.location)},`,
-    ...intro.links.map((link) => `  ${link.name.toLowerCase()}: ${JSON.stringify(link.href)},`),
-    "};",
-    "",
-    `// ${intro.description}`,
+    "⏺ I'll build your portfolio from your profile.",
+    "⏺ Read(profile.md)",
+    `  ⎿  ${intro.name} · ${intro.role} @ ${intro.company}`,
+    "⏺ Write(data/data.ts)",
+    "  ⎿  hero, work, projects, skills, education",
+    "⏺ Write(app/page.tsx)",
+    "  ⎿  bento grid: hero, terminal, oculus, six tiles",
+    "⏺ Update(app/globals.css)",
+    "  ⎿  terminal theme, grid, scanlines",
+    "⏺ Bash(npm run build)",
+    "  ⎿  ✓ Compiled successfully",
+    "⏺ Done. Your portfolio is ready.",
+    ...intro.links.map((link) => `   ${link.name.toLowerCase().padEnd(9)}${link.href}`),
   ], [intro]);
   const source = lines.join("\n");
-  const { frame, finish, restart } = useWorkspaceStartup(source);
+  const { frame, finish } = useWorkspaceStartup(source);
   const complete = frame.phase === "ready";
   const launching = frame.phase === "launching";
-  const introducing = frame.phase === "identity" || frame.phase === "morphing";
-  const fileOpen = frame.phase === "typing" || launching || complete;
-  const visibleSource = source.slice(0, frame.codeLength);
-  const cursorLine = visibleSource.split("\n").length - 1;
-  const cursorColumn = visibleSource.length - visibleSource.lastIndexOf("\n");
+  const introducing = frame.phase === "identity" || frame.phase === "shell" || frame.phase === "morphing";
+  const entered = frame.commandLength === OPEN_COMMAND.length;
+  const promptSent = frame.phase === "opening" || frame.phase === "typing" || launching || complete;
+  const working = frame.phase === "opening" || frame.phase === "typing";
+  const shown = source.slice(0, frame.codeLength).split("\n");
+  const typed = launching ? LAUNCH_COMMAND.slice(0, frame.launchLength ?? 0) : "";
   const [firstName, ...rest] = intro.name.split(" ");
 
   // For a moment after "ready" the tiles crossfade from skeleton to content; skips and replays don't.
@@ -104,19 +109,31 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
   }, [complete]);
   const resolving = complete && !settled && !frame.instant;
 
-  // Eye + title morph: the intro's eye and name fly into the oculus tile and the editor title bar.
+  // Keep the newest session output in view once it no longer fits.
+  useLayoutEffect(() => {
+    const session = sessionRef.current;
+    if (session) session.scrollTop = session.scrollHeight;
+  }, [frame.codeLength, frame.phase]);
+
   useLayoutEffect(() => {
     if (frame.phase !== "morphing") return;
-    const target = rootRef.current?.querySelector(".bento-oculus .tracking-eye-drawing");
-    const flights = ([[stageEyeRef.current, target], [stageNameRef.current, titleNameRef.current]] as const).map(([from, to]) => {
+    // "Enter": the name grows into the hero, the prompt box settles into the terminal.
+    const root = rootRef.current;
+    const pairs = [
+      [stageNameRef.current, root?.querySelector(".bento-name"), false],
+      [stagePromptRef.current, root?.querySelector(".cc-prompt"), true],
+    ] as const;
+    const flights = pairs.map(([from, to, stretch]) => {
       if (!from || !to) return null;
       const a = from.getBoundingClientRect();
       const b = to.getBoundingClientRect();
       if (!a.width || !b.width) return null;
+      const sx = b.width / a.width;
+      const sy = stretch ? b.height / a.height : sx;
       from.style.transformOrigin = "0 0";
       return from.animate(
-        [{ transform: "none" }, { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${b.width / a.width})` }],
-        { duration: 720, easing: FLIGHT_EASING, fill: "forwards" },
+        [{ transform: "none" }, { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${sx}, ${sy})` }],
+        { duration: 700, easing: FLIGHT_EASING, fill: "forwards" },
       );
     });
     return () => flights.forEach((flight) => flight?.cancel());
@@ -220,7 +237,7 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
       </header>
 
       <div className="bento-grid" id="workspace-files">
-        <section className="bento-hero" aria-label="Introduction">
+        <section className="bento-hero" aria-label="Introduction" aria-busy={!complete} data-loading={!complete || undefined}>
           <p className="text-muted-foreground">{"// hello, world"}</p>
           <p className="bento-name" aria-hidden="true">{firstName}<br /><span className="text-brand">{rest.join(" ")}</span></p>
           <p>{intro.role} <span className="text-brand">@ {intro.company}</span></p>
@@ -233,57 +250,50 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
 
         <div className="bento-editor">
           <header className="bento-editor-chrome">
-            <h1 id="workspace-heading" className="bento-title"><span className="text-brand" aria-hidden="true">❯</span><span ref={titleNameRef} className="bento-title-name">Preet Codes</span><span className="bento-title-path">/ portfolio</span></h1>
+            <h1 id="workspace-heading" className="bento-title"><span className="text-brand" aria-hidden="true">❯</span><span className="bento-title-name">Preet Codes</span><span className="bento-title-path">/ portfolio</span></h1>
             <span className="bento-version"><time dateTime={today}>{today.replaceAll("-", ".")}</time><abbr title="Coordinated Universal Time" className="bento-utc">UTC</abbr></span>
           </header>
-          <div className="bento-session">
-            <pre className="sr-only" aria-label="Introduction code" aria-hidden={complete}>{source}</pre>
-            {!complete && <button type="button" onClick={finish} className="workspace-skip">skip intro <span aria-hidden="true">[esc]</span></button>}
-            {!fileOpen && !introducing && (
-              <div className="workspace-shell" aria-hidden="true">
-                <div className="workspace-shell-title"><span className="h-1.5 w-1.5 bg-brand" /> zsh <span className="text-muted-foreground/50">/ ~/portfolio</span></div>
-                <div className="workspace-shell-prompt"><span className="text-brand">❯</span><span>{OPEN_COMMAND.slice(0, frame.commandLength)}{frame.phase === "shell" && <span className="workspace-cursor">&nbsp;</span>}</span></div>
-                <p className={`workspace-opening ${frame.phase === "opening" ? "opacity-100" : "opacity-0"}`}>↳ opening ~/portfolio/now.ts</p>
-                <div className="workspace-shell-footer">PREET CODES <span>workspace / init</span></div>
+          <div className="bento-session cc">
+            <pre className="sr-only" aria-label="Claude Code session" aria-hidden={complete}>{`> ${OPEN_COMMAND}\n${source}`}</pre>
+            <div ref={sessionRef} className="cc-scroll" tabIndex={0} role="region" aria-label="Claude Code session">
+              <div className="cc-log" aria-hidden={!complete}>
+                <div className="cc-welcome">
+                  <p><span className="text-brand">✻</span> Welcome to <b>Claude Code</b></p>
+                  <p className="cc-dim">cwd: ~/portfolio</p>
+                  <div className="cc-tips">
+                    <p>Tips for getting started:</p>
+                    <ol>
+                      <li>Press <kbd>W</kbd> <kbd>P</kbd> <kbd>E</kbd> <kbd>C</kbd> to jump between tiles</li>
+                      <li>Press a key twice, or <kbd>z</kbd>, to open Work or Projects full screen</li>
+                      <li>Type <kbd>help</kbd> below for every command</li>
+                    </ol>
+                  </div>
+                </div>
+                {promptSent && <p className="cc-user">&gt; {OPEN_COMMAND}</p>}
+                {frame.codeLength > 0 && shown.map((line, index) => (
+                  <p key={index} className={`cc-line ${line.trimStart().startsWith("⎿") ? "cc-result" : ""}`}>{renderTranscriptLine(line, intro.links, complete)}</p>
+                ))}
+                {working && <p className="cc-spinner"><span className="cc-spin">✻</span> {frame.phase === "opening" ? "Thinking…" : "Building…"} <span className="cc-dim">(esc to interrupt)</span></p>}
               </div>
-            )}
-            <div className={`bento-buffer ${fileOpen ? "workspace-buffer-open" : "workspace-buffer-pending"}`} inert={!fileOpen}>
-              <div className="flex items-center justify-between border-b border-border bg-muted/30 pr-4 text-[10px]">
-                <span className="workspace-file-tab border-r border-border border-t-2 border-t-brand bg-background px-4 py-3"><span className="mr-2 text-brand">TS</span> now.ts <span className="ml-5 text-muted-foreground">{complete ? "×" : "+"}</span></span>
-                <button type="button" onClick={() => { setZoomed(null); restart(); }} disabled={!complete} aria-label="Replay startup animation" title="Replay startup animation" className="workspace-replay"><RotateCcw className="h-3 w-3" /><span>replay</span></button>
-              </div>
-              <div className="bento-code text-[11px] leading-[1.9] sm:text-xs" tabIndex={0} role="region" aria-label="Introduction code buffer">
-                <code className="block min-w-max pr-6" aria-hidden={!complete}>
-                  {lines.map((line, index) => {
-                    const offset = lines.slice(0, index).reduce((total, previous) => total + previous.length + 1, 0);
-                    const text = line.slice(0, Math.max(0, frame.codeLength - offset));
-                    const current = index === cursorLine;
-                    return (
-                      <span className={`workspace-code-line flex ${current ? "bg-muted/40" : ""}`} key={index}>
-                        <span aria-hidden="true" className={`w-12 shrink-0 select-none pr-4 text-right ${current ? "text-brand" : "text-muted-foreground/60"}`}>{index + 1}</span>
-                        <span className="relative whitespace-pre">{highlightCode(text, intro.links, complete)}{current && <span aria-hidden="true" className="workspace-cursor">&nbsp;</span>}</span>
-                      </span>
-                    );
-                  })}
-                  {/* Empty buffer rows, the way nvim draws them. */}
-                  {Array.from({ length: 12 }, (_, i) => <span key={i} aria-hidden="true" className="block pl-5 text-brand/35">~</span>)}
-                </code>
-              </div>
-              <div className="flex items-stretch justify-between bg-muted/50 text-[10px]">
-                <div className="flex items-center"><span className="min-w-20 border-r border-border bg-muted px-3 py-1.5 text-center font-bold text-foreground">{complete || launching ? "NORMAL" : "INSERT"}</span><span className="flex items-center gap-1.5 px-3 text-muted-foreground"><GitBranch className="h-3 w-3" />main</span></div>
-                <span className="px-3 py-1.5 text-muted-foreground">now.ts <span className="ml-3 hidden sm:inline">utf-8</span> <span className="ml-3">{cursorLine + 1}:{cursorColumn}</span></span>
-              </div>
-              <form className="flex min-h-11 items-center gap-2 border-t border-border px-4 text-xs" onSubmit={(event) => { event.preventDefault(); if (!complete) finish(); else runCommand(command); }}>
-                <span aria-hidden="true" className="text-brand">:</span>
-                <input ref={inputRef} value={launching ? LAUNCH_COMMAND.slice(0, frame.launchLength ?? 0) : command} readOnly={!complete} onChange={(event) => setCommand(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setCommand(""); inputRef.current?.blur(); } }} aria-label="Portfolio command" autoComplete="off" spellCheck={false} placeholder={complete ? "help, projects, search…" : ""} className="min-w-0 flex-1 bg-transparent py-3 text-foreground outline-none placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-brand" />
-                <button type="submit" className={`border px-2 py-1 text-[10px] transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand ${launching && frame.launchLength === LAUNCH_COMMAND.length ? "border-brand bg-muted text-foreground" : "border-border text-muted-foreground"}`}>enter ↵</button>
-              </form>
+            </div>
+            <form className="cc-prompt" onSubmit={(event) => { event.preventDefault(); if (!complete) finish(); else runCommand(command); }}>
+              <span aria-hidden="true" className="text-brand">&gt;</span>
+              {complete ? (
+                <input ref={inputRef} value={command} onChange={(event) => setCommand(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setCommand(""); inputRef.current?.blur(); } }} aria-label="Portfolio command" autoComplete="off" spellCheck={false} placeholder="help, projects, search…" />
+              ) : (
+                <span className="cc-typed" aria-hidden="true">{typed}<span className="workspace-cursor">&nbsp;</span></span>
+              )}
+              <button type="submit" aria-label="Run command" className={launching && frame.launchLength === LAUNCH_COMMAND.length ? "cc-enter cc-enter-hot" : "cc-enter"}>↵</button>
+            </form>
+            <div className="cc-footer">
+              <span aria-hidden="true">⏵⏵ accept edits on</span>
+              {complete ? <span aria-hidden="true">⎇ main · ~/portfolio</span> : <button type="button" onClick={finish} className="cc-skip">skip intro <span aria-hidden="true">[esc]</span></button>}
             </div>
           </div>
           <p role="status" className="bento-message">{complete ? message : " "}</p>
         </div>
 
-        <div className="bento-oculus">
+        <div className="bento-oculus" data-loading={!complete || undefined}>
           <WorkspaceRail onNavigate={navigate} onOpenCommands={openCommands} />
         </div>
 
@@ -292,12 +302,13 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
 
       {introducing && (
         <div className="bento-stage" aria-hidden="true">
-          <div ref={stageEyeRef} className="bento-stage-eye"><EyeDrawing /></div>
-          <p className="bento-stage-title"><span className="bento-stage-prompt text-brand">❯</span> <span ref={stageNameRef} className="bento-stage-name">Preet Codes</span></p>
-          <div className="bento-stage-copy">
-            <p>{intro.role} <span className="text-brand">@ {intro.company}</span></p>
-            <p className="mt-1 text-[10px] text-muted-foreground">{intro.location}</p>
-            <span className="workspace-intro-hint"><span className="workspace-cursor">&nbsp;</span> opening my workspace</span>
+          <div className="bento-stage-head">
+            <p ref={stageNameRef} className="bento-stage-name">{firstName}<br /><span className="text-brand">{rest.join(" ")}</span></p>
+          </div>
+          <div ref={stagePromptRef} className="bento-stage-prompt">
+            <span className="text-brand">&gt;</span>
+            <span className="cc-typed">{OPEN_COMMAND.slice(0, frame.commandLength)}<span className="workspace-cursor">&nbsp;</span></span>
+            <span className={entered ? "cc-enter cc-enter-hot" : "cc-enter"}>↵</span>
           </div>
         </div>
       )}

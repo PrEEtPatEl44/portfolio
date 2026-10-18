@@ -1074,8 +1074,8 @@
     grid-template-columns: repeat(6, minmax(0, 1fr));
     grid-template-rows: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 0.95fr);
     grid-template-areas:
-      "hero hero editor editor projects projects"
-      "oculus oculus editor editor work work"
+      "editor editor hero hero projects projects"
+      "editor editor oculus oculus work work"
       "skills skills activity activity education contact";
   }
 
@@ -1172,6 +1172,80 @@
     color: var(--muted-foreground);
     font-size: 10px;
   }
+
+  /* ── centre tile: a Claude Code session that builds the portfolio ── */
+  .cc { display: flex; flex-direction: column; font-size: 12px; }
+
+  /* The log always fills the session; the welcome box absorbs spare height.
+     Once output overflows, the component scrolls to the newest line. */
+  .cc-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 14px 18px 10px;
+    scrollbar-width: none;
+  }
+
+  .cc-log { display: flex; flex-direction: column; gap: 3px; min-height: 100%; line-height: 1.7; }
+
+  .cc-welcome {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+    padding: 10px 14px;
+    border: 1px solid color-mix(in oklch, var(--brand) 55%, var(--border));
+    border-radius: 6px;
+  }
+
+  .cc-welcome > .cc-dim { padding-left: 18px; font-size: 10px; }
+  .cc-tips { margin-top: auto; padding-top: 12px; color: var(--muted-foreground); font-size: 11px; }
+  .cc-tips > p { margin-bottom: 4px; color: var(--foreground); }
+  .cc-tips ol { display: grid; gap: 2px; padding-left: 18px; list-style: decimal; }
+  .cc-tips kbd { color: var(--brand); font: inherit; }
+  .cc-user { margin-bottom: 6px; padding: 3px 10px; background: color-mix(in oklch, var(--muted) 45%, transparent); }
+  .cc-line { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .cc-result { color: var(--muted-foreground); }
+  .cc-dot, .cc-spinner { color: var(--brand); }
+  .cc-dim { color: var(--muted-foreground); }
+  .cc-ok { color: oklch(0.79 0.12 150); }
+  .cc-tool { color: var(--foreground); font-weight: 700; }
+  .cc-spinner { margin-top: 6px; }
+  .cc-spin { display: inline-block; animation: cc-spin 1.2s linear infinite; }
+
+  .cc-prompt {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    margin: 0 14px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .cc-prompt:focus-within { border-color: var(--brand); }
+  .cc-prompt input { flex: 1; min-width: 0; padding: 10px 0; border: 0; outline: none; background: transparent; color: var(--foreground); font: inherit; }
+  .cc-prompt input::placeholder { color: color-mix(in oklch, var(--muted-foreground) 70%, transparent); }
+  .cc-typed { flex: 1; white-space: pre; }
+  .cc-enter { padding: 2px 6px; color: var(--muted-foreground); }
+  .cc-enter-hot, .cc-enter:hover, .cc-enter:focus-visible { color: var(--brand); outline: none; }
+
+  .cc-footer {
+    display: flex;
+    flex-shrink: 0;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 16px 8px;
+    color: var(--muted-foreground);
+    font-size: 9px;
+  }
+
+  .cc-footer span:first-child { color: color-mix(in oklch, var(--brand) 80%, var(--muted-foreground)); }
+  .cc-skip { color: var(--muted-foreground); font-size: 9px; }
+  .cc-skip:hover, .cc-skip:focus-visible { color: var(--brand); outline: none; }
 
   /* ── oculus + keys tile (reuses the workspace rail) ── */
   .bento-oculus { grid-area: oculus; padding: 14px 16px; }
@@ -1376,6 +1450,38 @@
       -webkit-text-stroke-color 480ms ease var(--resolve-delay);
   }
 
+  /* Hero and oculus load the same way. The name stays visible: it flew in from the intro. */
+  :is(.bento-hero, .bento-oculus) { --redact: transparent; position: relative; }
+  :is(.bento-hero, .bento-oculus)[data-loading] { --redact: oklch(0.25 0 0); }
+  .bento-hero > p { align-self: flex-start; }
+
+  :is(.bento-hero > p:not(.bento-name), .bento-oculus .workspace-rail-label) {
+    background-image: repeating-linear-gradient(transparent 0 0.22lh, var(--redact) 0.22lh 0.78lh, transparent 0.78lh 1lh);
+  }
+
+  :is(.bento-hero .bento-links a, .bento-oculus :is(.tracking-eye-heading span, .tracking-eye-coordinates > span, .workspace-key kbd, .workspace-key span)) {
+    background-image: linear-gradient(var(--redact), var(--redact));
+  }
+
+  :is(.bento-hero[data-loading] > :not(.bento-name), .bento-hero[data-loading] > :not(.bento-name) *, .bento-oculus[data-loading] *) { color: transparent; }
+
+  /* The eye is an eye-shaped placeholder until it opens. */
+  .bento-oculus .tracking-eye-drawing { border-radius: 50%; background-color: var(--redact); }
+  .bento-oculus .tracking-eye-drawing > * { transition: opacity 480ms ease; }
+  .bento-oculus[data-loading] .tracking-eye-drawing > * { opacity: 0; }
+
+  :is(.bento-hero, .bento-oculus)[data-loading]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent 30%, color-mix(in oklch, var(--foreground) 6%, transparent) 50%, transparent 70%) 0 0 / 250% 100%;
+    animation: bento-shimmer 1.5s linear infinite;
+  }
+
+  .bento[data-resolving] :is(.bento-hero, .bento-oculus) { transition: --redact 480ms ease; }
+  .bento[data-resolving] :is(.bento-hero *, .bento-oculus *) { transition: color 480ms ease, opacity 480ms ease; }
+
   /* ── project deck ── */
   .deck { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100%; }
 
@@ -1459,7 +1565,7 @@
   [data-zoomed] .deck-title { font-size: 28px; }
   [data-zoomed] .deck-description { font-size: 14px; }
 
-  /* ── eye + title intro ── */
+  /* ── intro: name + a tiny prompt; "enter" flies both into the grid ── */
   .bento-stage {
     position: fixed;
     inset: 0;
@@ -1468,25 +1574,42 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 22px;
     padding: 24px;
     pointer-events: none;
-    text-align: center;
   }
 
-  .bento-stage-eye { width: min(360px, 60vw); margin-bottom: 18px; color: var(--muted-foreground); }
-  .bento-stage-eye .tracking-eye-lid { transform-box: view-box; transform-origin: 100px 60px; animation: bento-eye-open 1.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .bento-stage-title { font-size: clamp(28px, 6vw, 44px); font-weight: 700; line-height: 1.2; white-space: nowrap; }
-  .bento-stage-name { display: inline-block; }
-  .bento-stage-copy { margin-top: 28px; font-size: 12px; line-height: 1.8; }
-  .bento-stage-prompt, .bento-stage-copy { transition: opacity 220ms ease; }
-  .bento[data-startup="morphing"] .bento-stage-prompt,
-  .bento[data-startup="morphing"] .bento-stage-copy { opacity: 0; }
+  /* The name is sized to its text, not the 380px column, so its flight scales to the hero exactly. */
+  .bento-stage-head { width: min(380px, 80vw); }
+
+  .bento-stage-name {
+    width: fit-content;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    animation: bento-stage-in 500ms ease both;
+  }
+
+  .bento-stage-prompt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: min(380px, 80vw);
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid color-mix(in oklch, var(--brand) 55%, var(--border));
+    border-radius: 6px;
+    background: var(--background);
+    font-size: 12px;
+    animation: bento-stage-in 500ms 120ms ease both;
+  }
 
   .bento-bar, .bento-grid { transition: opacity 700ms ease; }
-  .bento[data-startup="identity"] :is(.bento-bar, .bento-grid) { opacity: 0; }
+  .bento:is([data-startup="identity"], [data-startup="shell"]) :is(.bento-bar, .bento-grid) { opacity: 0; }
 
-  /* The real eye and name stay hidden until their intro twins land on them. */
-  .bento:is([data-startup="identity"], [data-startup="morphing"]) :is(.bento-oculus .tracking-eye-drawing, .bento-title-name) { visibility: hidden; }
+  /* The hero name and terminal prompt stay hidden until their intro twins land on them. */
+  .bento:is([data-startup="identity"], [data-startup="shell"], [data-startup="morphing"]) :is(.bento-name, .cc-prompt) { visibility: hidden; }
 
   .bento[data-instant="true"] :is(.bento-bar, .bento-grid) { transition: none; }
 
@@ -1539,6 +1662,7 @@
   }
 
   .tracking-eye-beam { animation: tracking-eye-beam 600ms linear infinite; }
+
   /* The oculus blinks on its own: its lids squeeze shut and reopen every few seconds. */
   .tracking-eye-panel .tracking-eye-lid {
     transform-box: view-box;
@@ -1554,16 +1678,20 @@
 @keyframes bento-shimmer { from { background-position: 150% 0; } to { background-position: -100% 0; } }
 @keyframes deck-in { from { opacity: 0; transform: translateY(8px); } }
 @keyframes deck-progress { to { width: 100%; } }
-@keyframes bento-eye-open { 0% { transform: scaleY(0.04); } 32%, 66% { transform: scaleY(1); } 72% { transform: scaleY(0.06); } 78%, 100% { transform: scaleY(1); } }
+@keyframes cc-spin { to { transform: rotate(360deg); } }
+@keyframes bento-stage-in { from { opacity: 0; transform: translateY(6px); } }
 @keyframes tracking-eye-beam { to { stroke-dashoffset: -9; } }
 @keyframes tracking-eye-blink { 0%, 92%, 100% { transform: scaleY(1); } 94% { transform: scaleY(0.06); } 96% { transform: scaleY(1); } }
 @keyframes tracking-eye-ping { 50% { opacity: 0.35; transform: scale(1.8); } }
 
 @media (prefers-reduced-motion: reduce) {
   .bento-tile[data-loading] .bento-tile-body::after,
+  :is(.bento-hero, .bento-oculus)[data-loading]::after,
   .deck-detail > *,
   .deck-progress,
-  .bento-stage-eye .tracking-eye-lid,
+  .cc-spin,
+  .bento-stage-name,
+  .bento-stage-prompt,
   .tracking-eye-beam,
   .tracking-eye-panel .tracking-eye-lid,
   .tracking-eye-beam-origin {
