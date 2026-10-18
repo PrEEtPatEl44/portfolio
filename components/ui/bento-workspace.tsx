@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowUpRight, GitBranch, RotateCcw } from "lucide-react";
-import { BentoContext } from "@/components/ui/bento-tile";
+import { BentoContext, ZOOMABLE_TILES } from "@/components/ui/bento-tile";
 import { EyeDrawing } from "@/components/ui/tracking-eye";
 import { WorkspaceRail, WORKSPACE_SHORTCUTS } from "@/components/ui/workspace-rail";
 import { useWorkspaceStartup } from "@/components/ui/use-workspace-startup";
@@ -126,7 +126,7 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
   const toggleZoom = useCallback((id: string) => {
     finish();
     setFocused(id);
-    setZoomed((current) => (current === id ? null : id));
+    if (ZOOMABLE_TILES.includes(id)) setZoomed((current) => (current === id ? null : id));
   }, [finish]);
 
   // A section key focuses its tile; pressing it again on the focused tile zooms it.
@@ -151,7 +151,7 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
       if (!SECTIONS.includes(id)) return;
       finish();
       setFocused(id);
-      setZoomed(id);
+      if (ZOOMABLE_TILES.includes(id)) setZoomed(id);
     };
     const fromHash = () => open(window.location.hash.slice(1));
     const fromEvent = (event: Event) => open((event as CustomEvent<string>).detail);
@@ -184,7 +184,9 @@ export function BentoWorkspace({ intro, children }: { intro: WorkspaceIntro; chi
         requestAnimationFrame(() => inputRef.current?.focus());
       } else if (event.key.toLowerCase() === "z") {
         event.preventDefault();
-        toggleZoom(zoomed ?? focusedRef.current ?? "projects");
+        // With nothing selected, z opens Projects; on a tile that can't zoom it does nothing.
+        const target = zoomed ?? focusedRef.current ?? "projects";
+        if (ZOOMABLE_TILES.includes(target)) toggleZoom(target);
       }
     };
     window.addEventListener("keydown", onKey);

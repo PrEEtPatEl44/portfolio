@@ -11,6 +11,9 @@ type BentoState = {
   toggleZoom: (id: string) => void;
 };
 
+/** Only these tiles open full screen; the rest stay in the grid. */
+export const ZOOMABLE_TILES = ["projects", "work"];
+
 export const BentoContext = createContext<BentoState | null>(null);
 
 export function useBento() {
@@ -89,10 +92,12 @@ export function BentoTile({ id, title, filename, type = "MD", action, className 
         <span className="workspace-file-path">{filename}</span>
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           {action}
-          <button type="button" onClick={() => toggleZoom(id)} aria-pressed={isZoomed} aria-label={isZoomed ? `Restore ${title}` : `Zoom ${title}`} title={isZoomed ? "restore (esc)" : "zoom (z)"} className="bento-zoom">
-            {isZoomed ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
-            <span>{isZoomed ? "esc" : "z"}</span>
-          </button>
+          {ZOOMABLE_TILES.includes(id) && (
+            <button type="button" onClick={() => toggleZoom(id)} aria-pressed={isZoomed} aria-label={isZoomed ? `Restore ${title}` : `Zoom ${title}`} title={isZoomed ? "restore (esc)" : "zoom (z)"} className="bento-zoom">
+              {isZoomed ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+              <span>{isZoomed ? "esc" : "z"}</span>
+            </button>
+          )}
         </div>
       </header>
       <div className="bento-tile-body">{children}</div>
