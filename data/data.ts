@@ -73,7 +73,7 @@ export const hero: Hero = {
   name: "PREET PATEL",
   location: "Toronto, Ontario",
   position: "AI Operations Developer @ Docebo",
-  description: "Shipping agents before they ship me.",
+  description: "I build production AI agents and full-stack applications with Python, TypeScript, and React.",
   socialLinks: [
     {
       name: "GITHUB",
@@ -130,7 +130,7 @@ export const workExperience: WorkExperience[] = [
     role: "AI Operations Developer",
     period: "May 2026 - Present",
     description:
-      "Keeping AI agents running in production — evals, monitoring, and the plumbing in between.",
+      "Developing and maintaining production AI agents, including evaluations, monitoring, and supporting infrastructure.",
     tags: [],
     link: "https://www.docebo.com",
   },
@@ -139,7 +139,7 @@ export const workExperience: WorkExperience[] = [
     role: "Software Developer Intern",
     period: "Sept. 2024 - May 2025, Jan. 2026 - Apr. 2026",
     description:
-      "Shipping Internal AI tools with AI tools at light speed.",
+      "Developed internal AI tools and software applications with Python, TypeScript, and Azure.",
     tags: [
       "Python",
       "TypeScript",

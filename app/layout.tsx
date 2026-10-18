@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Space_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import { site } from "@/lib/site";
 import { Analytics } from "@vercel/analytics/next";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { MusicPlayer } from "@/components/ui/music-player";
@@ -26,8 +27,24 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Preet Patel",
-  description: "Personal portfolio of Preet Patel",
+  metadataBase: site.url,
+  title: site.title,
+  description: site.description,
+  authors: [{ name: site.name, url: site.url.href }],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "en_CA",
+    url: "/",
+    siteName: site.name,
+    title: site.title,
+    description: site.description,
+  },
+  twitter: {
+    card: "summary",
+    title: site.title,
+    description: site.description,
+  },
   icons: {
     icon: "/favicon.png",
   },

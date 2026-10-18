@@ -20,6 +20,8 @@ export function TextFlip({ children, className }: TextFlipProps) {
         {children}
       </span>
       <span
+        aria-hidden="true"
+        data-nosnippet
         className={cn(
           "absolute left-0 top-0 inline-flex translate-y-full transition-transform duration-300 ease-out group-hover/flip:translate-y-0",
           className

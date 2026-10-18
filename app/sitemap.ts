@@ -1,12 +1,11 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://preetpatel44.vercel.app";
+import { site } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: BASE_URL,
+      url: site.url.href,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
