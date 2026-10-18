@@ -13,6 +13,11 @@ type TrackingFrame = {
 };
 
 const restingGaze = { x: 0, y: 0, angle: 0, distance: 0 };
+/** Time constants for the pupil's eased motion. */
+const FOLLOW_MS = 60;
+const RETURN_MS = 260;
+/** How long the pupil keeps looking at the last cursor position after it leaves. */
+const LINGER_MS = 600;
 const almond = "M24 60 Q100 -2 176 60 Q100 122 24 60Z";
 
 /** The oculus drawing on its own, so the startup intro can open the same eye. */
@@ -76,20 +81,38 @@ export function TrackingEye({ className = "" }: { className?: string }) {
     let pointer: Point | null = null;
     let touch = false;
     let raf: number | null = null;
+    // The pupil eases toward its target every frame instead of jumping to it.
+    let gaze = restingGaze;
+    let lastLook = restingGaze;
+    let leftAt = 0;
+    let lastTime = performance.now();
 
-    const update = () => {
+    const update = (now: number) => {
       raf = null;
+      const dt = Math.min(64, now - lastTime);
+      lastTime = now;
       const bounds = eye.getBoundingClientRect();
       const origin = { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+
+      // When the cursor leaves, keep looking where it was for a beat, then drift home slowly.
+      let target = restingGaze;
+      if (pointer && !motion.matches) target = lastLook = getEyeGaze(origin, pointer);
+      else if (!motion.matches && now - leftAt < LINGER_MS) target = lastLook;
+      const ease = motion.matches ? 1 : 1 - Math.exp(-dt / (pointer ? FOLLOW_MS : RETURN_MS));
+      gaze = { ...target, x: gaze.x + (target.x - gaze.x) * ease, y: gaze.y + (target.y - gaze.y) * ease };
+
       setFrame({
         pointer,
         origin,
         // The iris ring is r=21 in a 200-unit-wide drawing.
         irisRadius: bounds.width * 0.11,
-        gaze: pointer && !motion.matches ? getEyeGaze(origin, pointer) : restingGaze,
+        gaze,
         touch,
         reducedMotion: motion.matches,
       });
+
+      const settling = Math.abs(target.x - gaze.x) > 0.02 || Math.abs(target.y - gaze.y) > 0.02;
+      if (settling || (!pointer && now - leftAt < LINGER_MS)) schedule();
     };
 
     const schedule = () => {
@@ -102,6 +125,7 @@ export function TrackingEye({ className = "" }: { className?: string }) {
       schedule();
     };
     const reset = () => {
+      if (pointer) leftAt = performance.now();
       pointer = null;
       schedule();
     };
@@ -139,7 +163,7 @@ export function TrackingEye({ className = "" }: { className?: string }) {
   }, []);
 
   const tracking = frame.pointer !== null;
-  const gaze = tracking ? frame.gaze : restingGaze;
+  const gaze = frame.gaze;
   const overlay = tracking && !frame.touch && !frame.reducedMotion;
   const beam = overlay && frame.pointer ? getSightline(frame.origin, frame.pointer, frame.irisRadius) : null;
   const coordinate = (axis: "x" | "y") => tracking ? String(Math.round(frame.pointer![axis])).padStart(4, "0") : "----";

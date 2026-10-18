@@ -1,0 +1,1615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layout Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── tokens: mirrors app/globals.css .dark ─────────────────────────── */
+:root {
+  --bg: oklch(0% 0 0);
+  --fg: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --mfg: oklch(0.708 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --brand: oklch(0.65 0.2 41);
+  --str: oklch(0.79 0.07 150);
+  --grid: rgba(255, 255, 255, 0.07);
+  --panel: color-mix(in oklch, var(--muted) 30%, var(--bg));
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--fg); }
+body {
+  min-height: 100svh;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 12px;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 40; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.15) 2px 4px);
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; }
+.b { color: var(--brand); }
+.m { color: var(--mfg); }
+.ico { width: 12px; height: 12px; flex-shrink: 0; }
+.cursor { display: inline-block; width: .65em; background: var(--brand); animation: blink 1.1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── reveal: everything marked .after waits for "ready" ────────────── */
+#app { transition: none; }
+#app.pre { opacity: 0; }
+#app:not([data-phase="ready"]) .after { visibility: hidden; }
+#app[data-phase="ready"] .after { animation: site-open 650ms ease-out backwards; }
+#app.landing .ws-name, #app.landing-eye .oculus.primary .oc-svg { visibility: hidden; }
+@keyframes site-open { from { opacity: 0; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0); } }
+
+/* ── editor (now.ts) ───────────────────────────────────────────────── */
+.editor { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--border); background: var(--bg); }
+.ed-chrome { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+.ws-title { display: flex; align-items: baseline; gap: 8px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.ws-name { display: inline-block; }
+.ws-prompt { color: var(--brand); }
+.ws-path { color: var(--mfg); font-size: 10px; font-weight: 400; }
+.ed-slot:empty { display: none; }
+.ed-slot { margin-left: auto; }
+.ed-version { margin-left: auto; font-size: 10px; color: var(--mfg); }
+.ed-slot:not(:empty) + .ed-version { margin-left: 0; }
+.ed-version { display: inline-flex; align-items: center; gap: 6px; }
+.ed-date { font-variant-numeric: tabular-nums; color: var(--fg); }
+.utc-tag { padding: 1px 4px; border: 1px solid var(--brand); color: var(--brand); font-size: 8px; letter-spacing: .08em; line-height: 1.4; }
+.ed-session { position: relative; }
+.ed-shell { position: absolute; inset: 0; z-index: 2; display: none; flex-direction: column; padding: 20px; background: var(--bg); }
+.editor[data-ed="shell"] .ed-shell, .editor[data-ed="opening"] .ed-shell { display: flex; }
+.editor[data-ed="shell"] .ed-buffer, .editor[data-ed="opening"] .ed-buffer { visibility: hidden; }
+.editor[data-ed="typing"] .ed-buffer { animation: buffer-open 360ms ease-out both; }
+@keyframes buffer-open { from { opacity: 0; transform: translateY(6px); } }
+.ed-shell-title { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--mfg); }
+.ed-shell-title i { width: 6px; height: 6px; background: var(--brand); }
+.ed-prompt { display: flex; gap: 12px; margin-top: 48px; min-height: 24px; white-space: pre; }
+.ed-opening { margin: 12px 0 0 22px; font-size: 10px; color: var(--mfg); opacity: 0; transition: opacity 150ms; }
+.editor[data-ed="opening"] .ed-opening { opacity: 1; }
+.ed-shell-foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); color: var(--mfg); font-size: 9px; letter-spacing: .06em; }
+.ed-tabs { display: flex; align-items: center; justify-content: space-between; padding-right: 16px; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--muted) 30%, transparent); font-size: 10px; }
+.ed-tab { padding: 11px 16px; border-right: 1px solid var(--border); border-top: 2px solid var(--brand); background: var(--bg); }
+.ed-tab .b { margin-right: 8px; }
+.ed-tab-x { margin-left: 20px; color: var(--mfg); }
+.ed-replay { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; color: var(--mfg); }
+.ed-replay:hover { color: var(--brand); }
+.editor:not([data-ed="ready"]) .ed-replay { visibility: hidden; }
+.ed-code { display: block; overflow-x: auto; padding: 20px 24px 20px 0; font: inherit; font-size: 12px; line-height: 1.9; }
+.ln { display: flex; min-height: 1.9em; min-width: max-content; }
+.ln.cur { background: color-mix(in oklch, var(--muted) 40%, transparent); }
+.ln-n { width: 48px; flex-shrink: 0; padding-right: 16px; text-align: right; color: color-mix(in oklch, var(--mfg) 55%, transparent); user-select: none; }
+.ln.cur .ln-n { color: var(--brand); }
+.ln-t { white-space: pre; }
+.tilde { padding-left: 20px; color: color-mix(in oklch, var(--brand) 35%, transparent); }
+.c-com { color: var(--mfg); } .c-kw { color: var(--brand); } .c-str { color: var(--str); }
+.src-link { color: var(--str); text-decoration: underline; text-decoration-color: var(--mfg); text-underline-offset: 4px; }
+.src-link:hover { color: var(--brand); }
+.ed-status { display: flex; align-items: stretch; justify-content: space-between; background: color-mix(in oklch, var(--muted) 50%, transparent); font-size: 10px; }
+.ed-mode { min-width: 80px; padding: 6px 12px; border-right: 1px solid var(--border); background: var(--muted); font-weight: 700; text-align: center; }
+.ed-branch { display: flex; align-items: center; padding: 0 12px; color: var(--mfg); }
+.ed-file { display: flex; align-items: center; gap: 12px; padding: 0 12px; color: var(--mfg); }
+.ed-cmdline { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-top: 1px solid var(--border); }
+.ed-input { flex: 1; min-width: 0; padding: 12px 0; border: 0; outline: none; background: transparent; color: var(--fg); font: inherit; }
+.ed-input::placeholder { color: color-mix(in oklch, var(--mfg) 70%, transparent); }
+.ed-enter { padding: 4px 8px; border: 1px solid var(--border); color: var(--mfg); font-size: 10px; }
+.ed-enter.hot, .ed-enter:hover { border-color: var(--brand); color: var(--fg); }
+.ed-msg { padding: 16px; border-top: 1px solid var(--border); color: var(--mfg); font-size: 10px; line-height: 1.7; }
+
+/* ── oculus ────────────────────────────────────────────────────────── */
+.oculus { color: var(--mfg); }
+.oc-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.oc-lidwrap { transform-box: view-box; transform-origin: 100px 60px; }
+.oc-head, .oc-coords { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 10px; font-variant-numeric: tabular-nums; }
+.oc-head { text-transform: uppercase; letter-spacing: .04em; }
+.oc-coords { padding-top: 7px; border-top: 1px solid var(--border); color: var(--fg); }
+.oc-coords i { margin-right: 3px; font-style: normal; color: var(--mfg); }
+.oc-status.on { color: var(--brand); }
+.oc-panel { padding: 14px 16px; border: 1px solid var(--border); background: var(--bg); }
+#sight { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
+#sight[hidden] { display: none; }
+#sight > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* dotted sightline: dots stream from the eye out to the cursor */
+#sight-line { animation: sight-travel 600ms linear infinite; }
+#sight-origin { animation: sight-ping 1.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes sight-travel { to { stroke-dashoffset: -9; } }
+@keyframes sight-ping { 50% { opacity: .35; transform: scale(1.8); } }
+#reticle { position: absolute; transform: translate(-50%, -50%); color: var(--brand); opacity: .65; }
+#rlabel { position: absolute; padding: 3px 5px; border-left: 1px solid var(--brand); background: var(--bg); color: var(--mfg); font-size: 9px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ── keys ──────────────────────────────────────────────────────────── */
+.keys { display: grid; gap: 6px; }
+.keys-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.keys-grid { grid-template-columns: 1fr 1fr; }
+.key { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 10px; border: 1px solid var(--border); border-bottom-width: 3px; background: var(--bg); color: var(--mfg); font-size: 10px; transition: border-color 150ms, color 150ms, transform 150ms; }
+.key kbd { width: 22px; color: var(--fg); font: inherit; font-size: 12px; text-align: center; }
+.key:hover, .key:focus-visible, .key.on { border-color: var(--brand); color: var(--brand); outline: none; }
+.key:active, .key.on { transform: translateY(2px); }
+
+/* ── files ─────────────────────────────────────────────────────────── */
+.file { min-width: 0; border: 1px solid var(--border); background: var(--bg); scroll-margin-top: 80px; }
+.file:focus { outline: none; }
+.file-h { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 46px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--panel); font-size: 10px; }
+.file-h h2 { font-size: 12px; }
+.file-path { color: var(--mfg); }
+.file-act { margin-left: auto; }
+.entry { display: flex; gap: 16px; padding: 24px; }
+.entry + .entry { border-top: 1px dashed var(--border); }
+.entry-n { flex-shrink: 0; width: 20px; padding-top: 2px; color: var(--mfg); opacity: .6; font-size: 10px; }
+.entry-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.entry-title { font-size: 13px; font-weight: 700; line-height: 1.7; }
+.lnk { display: inline-flex; align-items: center; gap: 4px; color: var(--brand); font-size: 11px; text-underline-offset: 4px; }
+.lnk:hover { text-decoration: underline; }
+.lnk.entry-title { color: var(--fg); font-size: 13px; }
+.period { color: var(--mfg); font-size: 10px; line-height: 1.8; }
+.desc { margin-bottom: 16px; color: var(--mfg); font-size: 12px; line-height: 1.9; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 7px; border: 1px solid var(--border); color: var(--mfg); font-size: 10px; }
+.tag:hover { border-color: var(--brand); color: var(--fg); }
+.tag .b { font-size: 9px; }
+.pad { padding: 20px 24px; }
+.contact-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--brand); color: var(--brand); font-size: 11px; }
+.contact-btn:hover { background: var(--muted); color: var(--fg); }
+.heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 10px); grid-auto-columns: 10px; gap: 3px; overflow-x: auto; padding-bottom: 6px; }
+.heat i { background: var(--muted); opacity: .5; }
+.heat i[data-l="1"] { background: color-mix(in oklch, var(--brand) 35%, var(--bg)); opacity: 1; }
+.heat i[data-l="2"] { background: color-mix(in oklch, var(--brand) 55%, var(--bg)); opacity: 1; }
+.heat i[data-l="3"] { background: color-mix(in oklch, var(--brand) 78%, var(--bg)); opacity: 1; }
+.heat i[data-l="4"] { background: var(--brand); opacity: 1; }
+.heat-cap { margin-top: 10px; color: var(--mfg); font-size: 10px; }
+.site-status { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding: 16px; border: 1px solid var(--border); background: var(--panel); color: var(--mfg); font-size: 10px; }
+.site-status .links { display: flex; gap: 20px; }
+.site-status a:hover { color: var(--brand); }
+.stack { display: grid; gap: 56px; margin-top: 48px; }
+.span2 { grid-column: 1 / -1; }
+.proj { position: relative; display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 20px; border: 1px solid var(--border); background: var(--bg); transition: border-color 200ms, transform 200ms; }
+.proj:hover { border-color: var(--brand); transform: translateY(-2px); }
+.proj-n { font-size: 40px; font-weight: 700; line-height: 1; color: transparent; -webkit-text-stroke: 1px color-mix(in oklch, var(--fg) 35%, transparent); }
+.proj:hover .proj-n { -webkit-text-stroke-color: var(--brand); }
+.proj-arrow { position: absolute; top: 18px; right: 18px; color: var(--mfg); }
+.proj:hover .proj-arrow { color: var(--brand); }
+.proj h3 { font-size: 14px; }
+.proj p { flex: 1; color: var(--mfg); line-height: 1.8; }
+.proj-feat { position: absolute; top: 20px; right: 44px; color: var(--brand); font-size: 9px; letter-spacing: .06em; }
+
+/* ── stage (morph overlay) ─────────────────────────────────────────── */
+#stage { position: fixed; inset: 0; z-index: 50; display: none; pointer-events: none; }
+#stage.on { display: block; }
+.st-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.st-title { font-size: clamp(28px, 6vw, 44px); font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.st-name { display: inline-block; }
+.st-copy { margin-top: 28px; font-size: 12px; line-height: 1.8; }
+.st-copy .mt { margin-top: 20px; font-size: 10px; }
+.st-hint { display: flex; justify-content: center; gap: 8px; margin-top: 32px; color: var(--brand); font-size: 9px; }
+.st-eye { width: min(560px, 80vw); color: var(--mfg); }
+.st-eye-sm { width: min(360px, 60vw); margin-bottom: 18px; }
+.st-eyecap { margin-top: 18px; color: var(--mfg); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.st-boot { position: absolute; inset: 10vh 10vw; padding: 24px; border: 1px solid var(--border); background: var(--bg); }
+.st-log { font: inherit; font-size: 12px; line-height: 1.9; color: var(--mfg); white-space: pre-wrap; }
+.st-log .ok { color: var(--str); }
+.st-tile { position: absolute; inset: 0; display: grid; place-items: center; }
+.st-tile::before, .st-tile::after { content: ""; position: absolute; background: color-mix(in oklch, var(--brand) 40%, transparent); }
+.st-tile::before { left: 0; right: 0; top: 50%; height: 1px; animation: scan-x 700ms var(--ease) both; }
+.st-tile::after { top: 0; bottom: 0; left: 50%; width: 1px; animation: scan-y 700ms var(--ease) both; }
+.st-tile span { padding: 4px 8px; background: var(--bg); color: var(--brand); font-size: 10px; z-index: 1; }
+@keyframes scan-x { from { transform: scaleX(0); } }
+@keyframes scan-y { from { transform: scaleY(0); } }
+
+/* ── 1 · current ───────────────────────────────────────────────────── */
+.L-current { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; align-items: start; max-width: 1120px; margin: 0 auto; padding: 80px 32px 96px; }
+.cur-rail { position: sticky; top: 80px; }
+.rail-label { margin: 20px 0 10px; color: var(--mfg); font-size: 9px; letter-spacing: .06em; }
+.cur-rail .key { justify-content: flex-start; }
+
+/* ── fit: one-viewport bento layouts ─────── ───────────────────── */
+.fit { height: 100svh; }
+.zoom-host { position: relative; }
+.fit .editor { display: flex; flex-direction: column; height: 100%; }
+.fit .ed-session { flex: 1; min-height: 0; }
+.fit .ed-buffer { display: flex; flex-direction: column; height: 100%; }
+.fit .ed-code { flex: 1; min-height: 0; overflow: hidden; padding-block: 14px; }
+.fit .ed-msg { display: none; }
+.fit .file { display: flex; flex-direction: column; height: 100%; scroll-margin: 0; }
+.fit .file-b { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; }
+.fit .file-h { min-height: 40px; padding: 8px 12px; flex-shrink: 0; }
+.fit .entry { padding: 14px 16px; gap: 12px; }
+.fit .entry-top { margin-bottom: 4px; }
+.fit .desc { margin-bottom: 10px; line-height: 1.7; }
+.fit .pad { padding: 14px 16px; }
+.fit .tag { padding: 3px 6px; font-size: 9px; }
+.fit .tags { gap: 5px; }
+.fit [data-sec="contact"] .desc, .fit [data-sec="contact"] .pad > p.m { display: none; }
+.fit .key { gap: 6px; padding: 4px 8px; }
+.fit .key kbd { width: 14px; }
+.bn-grid :is([data-sec="education"], [data-sec="contact"]) .file-path { display: none; }
+.fit [data-sec="contact"] h3 { font-size: 15px !important; }
+.fit .heat { grid-auto-columns: minmax(0, 1fr); grid-template-rows: repeat(7, auto); gap: 2px; overflow: hidden; }
+.fit .heat i { aspect-ratio: 1; }
+.fit .zoomed .heat, .fit .heat:is(.zoomed *) { gap: 4px; }
+.focus { border-color: var(--brand) !important; }
+.pulse { animation: pulse 600ms ease-out; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--brand) 60%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+
+/* zoom: a tile/pane takes over the whole grid (tmux prefix-z) */
+.zoomed { position: absolute !important; inset: 0; z-index: 20; grid-area: auto !important; height: auto !important; border-color: var(--brand) !important; }
+.zbtn { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 0 6px; border: 1px solid var(--border); color: var(--mfg); font-size: 10px; }
+.zbtn:hover { border-color: var(--brand); color: var(--brand); }
+.zbtn .zout, .zoomed .zbtn .zin, .zbtn:is(.zoomed *) .zin { display: none; }
+.zoomed .zbtn .zout, .zbtn:is(.zoomed *) .zout { display: inline; }
+.file-act { display: flex; align-items: center; gap: 6px; }
+
+/* project deck: one project in detail + the whole list, auto-cycling */
+.pj-body { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100%; overflow: hidden !important; }
+.pj-detail { display: flex; flex-direction: column; gap: 8px; min-height: 0; padding: 16px; overflow: hidden; }
+.pj-detail > * { animation: pj-in 380ms var(--ease) both; }
+.pj-detail > :nth-child(2) { animation-delay: 40ms; } .pj-detail > :nth-child(3) { animation-delay: 80ms; }
+.pj-detail > :nth-child(4) { animation-delay: 120ms; } .pj-detail > :nth-child(5) { animation-delay: 160ms; }
+@keyframes pj-in { from { opacity: 0; transform: translateY(8px); } }
+.pj-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.pj-detail .proj-n { font-size: 44px; -webkit-text-stroke-color: var(--brand); }
+.pj-detail .proj-feat { position: static; }
+.pj-detail h3 { font-size: 15px; }
+.pj-detail p { color: var(--mfg); line-height: 1.7; }
+.pj-open { margin-top: auto; }
+.pj-list { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
+.pj-item { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 6px 12px; overflow: hidden; color: var(--mfg); font-size: 10px; text-align: left; }
+.pj-list li:nth-child(odd) .pj-item { border-right: 1px solid var(--border); }
+.pj-list li:nth-child(n+3) .pj-item { border-top: 1px solid var(--border); }
+.pj-item:hover { color: var(--fg); }
+.pj-item.on { background: color-mix(in oklch, var(--brand) 14%, transparent); color: var(--fg); }
+.pj-i { color: var(--brand); }
+.pj-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pj-tags { display: none; }
+.pj-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--brand); }
+.pj-item.on .pj-bar { animation: pj-fill 5s linear forwards; }
+.pj:hover .pj-bar, .pj[data-auto="off"] .pj-bar { animation-play-state: paused; }
+.pj[data-auto="off"] .pj-item.on .pj-bar { width: 100%; animation: none; }
+#app:not([data-phase="ready"]) .pj-bar, .zoomed .pj-bar, .pj.zoomed .pj-bar { animation: none !important; }
+@keyframes pj-fill { to { width: 100%; } }
+:is(.pj.zoomed, .zoomed .pj) .pj-body { grid-template-rows: none; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); }
+:is(.pj.zoomed, .zoomed .pj) .pj-list { order: -1; grid-template-columns: 1fr; align-content: start; border-top: 0; border-right: 1px solid var(--border); }
+:is(.pj.zoomed, .zoomed .pj) .pj-item { flex-wrap: wrap; min-height: 72px; padding: 14px 18px; border: 0 !important; border-bottom: 1px solid var(--border) !important; font-size: 12px; }
+:is(.pj.zoomed, .zoomed .pj) .pj-item.on { box-shadow: inset 2px 0 var(--brand); }
+:is(.pj.zoomed, .zoomed .pj) .pj-tags { display: block; flex-basis: 100%; padding-left: 26px; color: var(--mfg); font-size: 9px; }
+:is(.pj.zoomed, .zoomed .pj) .pj-detail { justify-content: center; gap: 16px; padding: 48px; max-width: 760px; }
+:is(.pj.zoomed, .zoomed .pj) .pj-detail .proj-n { font-size: clamp(80px, 12vw, 160px); }
+:is(.pj.zoomed, .zoomed .pj) .pj-top { justify-content: flex-start; }
+:is(.pj.zoomed, .zoomed .pj) .pj-detail h3 { font-size: 28px; }
+:is(.pj.zoomed, .zoomed .pj) .pj-detail p { font-size: 14px; }
+:is(.pj.zoomed, .zoomed .pj) .pj-open { margin-top: 8px; font-size: 13px; }
+
+/* ── shared: one-screen bento layouts ─────────────────────────────── */
+body[data-layout^="bento"] { overflow: hidden; }
+.tm-bar { display: flex; align-items: center; gap: 12px; padding: 0 12px; background: var(--brand); color: var(--bg); font-size: 10px; white-space: nowrap; overflow: hidden; }
+.tm-sess { font-weight: 700; }
+.tm-win-tab { padding: 0 8px; background: var(--bg); color: var(--brand); line-height: 24px; }
+.tm-right { margin-left: auto; }
+
+/* ── 2 · bento v1 ─────────────────────────────────────────────────────── */
+.L-bento { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; padding: 14px; }
+.bn-grid { display: grid; gap: 10px; min-height: 0; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); grid-template-areas: "hero hero ed ed pj pj" "hero hero ed ed pj pj" "oc keys ed ed wk wk" "sk sk act act edu ct"; }
+.bn-grid > * { min-width: 0; min-height: 0; overflow: hidden; }
+.bn { border: 1px solid var(--border); background: var(--bg); transition: border-color 200ms; }
+.bn-hero { grid-area: hero; display: flex; flex-direction: column; gap: 6px; padding: clamp(16px, 2vw, 28px); }
+.bn-name { margin: 6px 0 10px; font-size: clamp(36px, 5vw, 76px); line-height: .92; letter-spacing: -.02em; }
+.bn-name span { color: var(--brand); }
+.bn-links { display: flex; gap: 16px; margin-top: auto; }
+.bn-ed { grid-area: ed; }
+.bn-grid > .pj { grid-area: pj; }
+.bn-oc { grid-area: oc; } .bn-oc .oc-panel { height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+.bn-keys { grid-area: keys; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; padding: 12px; }
+.bn-keys p { color: var(--mfg); font-size: 9px; letter-spacing: .06em; }
+.bn-keys .key { min-height: 30px; padding: 4px 8px; }
+.bn-grid [data-sec="work"] { grid-area: wk; } .bn-grid [data-sec="education"] { grid-area: edu; }
+.bn-grid [data-sec="contact"] { grid-area: ct; } .bn-grid [data-sec="skills"] { grid-area: sk; }
+.bn-grid [data-sec="activity"] { grid-area: act; }
+.L-bento .site-status { padding: 8px 12px; }
+
+/* ── 3 · bento v2: tmux bar on top, roomier gutters, tiles sized to content ── */
+.L-bento.v2 { grid-template-rows: 24px minmax(0, 1fr); gap: 0; padding: 0; }
+.v2 .bn-grid { gap: 16px; margin: 22px 24px 24px; grid-template-rows: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, .95fr); grid-template-areas: "hero hero ed ed pj pj" "ock ock ed ed wk wk" "sk sk act act edu ct"; }
+.v2 .bn-hero { justify-content: center; gap: 4px; }
+.v2 .bn-name { margin: 4px 0 10px; }
+.v2 .bn-links { margin-top: 12px; }
+.v2 .pj-detail { justify-content: center; }
+.v2 .pj-open { margin-top: 4px; }
+.v2 .ed-msg { display: block; padding: 10px 16px; }
+/* ── 4 · bento v3: skeleton tiles while now.ts loads ──────────────── */
+.skel { --sk: color-mix(in oklch, var(--muted) 75%, transparent); }
+#app:not([data-phase="ready"]) .skel .bn-grid > .after { visibility: visible; position: relative; border-color: var(--border); }
+#app:not([data-phase="ready"]) .skel .bn-grid > .after > * { visibility: hidden; }
+#app:not([data-phase="ready"]) .skel .bn-grid > .after::before,
+#app:not([data-phase="ready"]) .skel .bn-grid > .after::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+#app:not([data-phase="ready"]) .skel .bn-grid > .after::after {
+  background:
+    linear-gradient(var(--sk), var(--sk)) 14px 15px / 9% 10px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) calc(14px + 11%) 15px / 22% 10px no-repeat,
+    linear-gradient(var(--border), var(--border)) 0 40px / 100% 1px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) 16px 62px / 46% 12px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) 16px 86px / 28% 8px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) 16px 110px / 76% 8px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) 16px 126px / 58% 8px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) 16px 150px / 44px 18px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) 66px 150px / 58px 18px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) 130px 150px / 38px 18px no-repeat,
+    linear-gradient(var(--sk), var(--sk)) 174px 150px / 52px 18px no-repeat;
+}
+#app:not([data-phase="ready"]) .skel .bn-grid > .after::before {
+  z-index: 1;
+  background: linear-gradient(100deg, transparent 30%, color-mix(in oklch, var(--fg) 7%, transparent) 50%, transparent 70%) 0 0 / 250% 100%;
+  animation: sk-shimmer 1.5s linear infinite;
+}
+@keyframes sk-shimmer { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+.skel .tm-load::after { content: "6 buffers loaded"; }
+#app:not([data-phase="ready"]) .skel .tm-load::after { content: "⟳ loading buffers…"; }
+#app[data-phase="ready"] .skel .bn-grid > .after { animation: skel-resolve 520ms var(--ease) backwards; }
+#app[data-phase="ready"] .skel .bn-grid > .after:nth-child(5) { animation-delay: 90ms; }
+#app[data-phase="ready"] .skel .bn-grid > .after:nth-child(6) { animation-delay: 180ms; }
+#app[data-phase="ready"] .skel .bn-grid > .after:nth-child(7) { animation-delay: 270ms; }
+#app[data-phase="ready"] .skel .bn-grid > .after:nth-child(8) { animation-delay: 360ms; }
+#app[data-phase="ready"] .skel .bn-grid > .after:nth-child(9) { animation-delay: 450ms; }
+@keyframes skel-resolve { from { opacity: 0; filter: blur(6px); transform: scale(.985); } }
+
+/* empty buffer rows render as vim's "~" instead of blank space */
+.v2 .tilde { display: block; white-space: pre; line-height: 1.9; }
+.v2 .tilde::after { content: "\a~\a~\a~\a~\a~\a~\a~\a~\a~\a~\a~\a~"; }
+.bn-ock { grid-area: ock; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 148px); gap: 16px; align-items: center; padding: 14px 16px; }
+.bn-ock .oc-panel { padding: 0; border: 0; }
+.bn-ock .rail-label { margin: 0 0 8px; }
+.bn-ock .keys { gap: 5px; }
+.bn-ock .key { min-height: 28px; }
+.heat-stats { display: none; grid-template-columns: repeat(3, auto); justify-content: start; gap: 6px 22px; margin-top: 12px; color: var(--mfg); font-size: 9px; letter-spacing: .04em; }
+.heat-stats b { display: block; color: var(--fg); font-size: 15px; letter-spacing: 0; }
+.v2 .heat-stats { display: grid; }
+.v2 .heat-cap { margin-top: 8px; }
+@media (height < 820px) {
+  .v2 .bn-grid { gap: 10px; margin: 14px 16px 16px; }
+  .v2 .bn-hero > .m:first-child { display: none; }
+  .v2 .pj-detail { gap: 6px; padding: 12px 16px; }
+  .v2 .pj-detail .proj-n { font-size: 30px; }
+  .v2 .pj-detail .tags { display: none; }
+  .v2 .bn-ock { padding: 10px 14px; }
+  .v2 .bn-ock .key { min-height: 24px; padding-block: 2px; }
+  .v2 .bn-ock .key[data-key="?"], .v2 .bn-ock .rail-label { display: none; }
+  .v2 .heat-stats { display: none; }
+  .v2 .fit .entry, .v2 .entry { padding: 10px 14px; }
+  .v2 .ed-msg { display: none; }
+}
+
+/* ── responsive ────────────────────────────────────────────────────── */
+@media (width < 900px) {
+  .L-current { grid-template-columns: 72px minmax(0, 1fr); gap: 16px; padding: 64px 12px 96px; }
+  .L-current .rail-label, .L-current .key span, .L-current .oc-head, .L-current .oc-coords { display: none; }
+  .L-current .oc-panel { padding: 6px 0; } .L-current .key { justify-content: center; }
+  .ws-path { display: none; }
+}
+@media (width < 900px), (height < 620px) {
+  body[data-layout^="bento"] { overflow: auto; }
+  .fit { height: auto; }
+  .bn-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: none; }
+  .bn-grid > * { grid-area: auto !important; }
+  .fit .file, .fit .editor { height: auto; }
+  .bn-ed { height: auto; }
+  .L-bento.v2 { grid-template-rows: 24px auto; }
+  .v2 .bn-grid { margin: 16px; }
+  .pj-body { min-height: 380px; }
+}
+@media (width < 560px) {
+  .ws-path { display: none; }
+}
+
+/* ── 5 · bento v5: skills lab ──────────────────────────────────────── */
+.bn-grid > .skl-tile[data-sec="projects"] { grid-area: pj; }
+.skl-zoom { display: none; }
+.skl-tile.zoomed .skl-small { display: none; }
+.skl-tile.zoomed .skl-zoom { display: grid; grid-template-columns: 260px minmax(0, 1fr); height: 100%; }
+.skl-mini { display: grid; gap: 3px; padding: 12px 14px; font-size: 11px; list-style: none; }
+.skl-mini li { display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap; }
+.skl-mini li > span:not(.b):not(.m) { overflow: hidden; text-overflow: ellipsis; }
+.skl-mini .m { margin-left: auto; color: var(--mfg); font-size: 9px; }
+.skl-mini-group { margin-top: 4px; color: var(--fg); font-weight: 700; }
+.skl-mini-sub { padding-left: 18px; color: var(--mfg); }
+.skl-list { overflow-y: auto; padding: 10px 0; border-right: 1px solid var(--border); scrollbar-width: thin; }
+.skl-list h4 { padding: 12px 16px 4px; color: var(--mfg); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
+.skl-list button { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 6px 16px; color: var(--mfg); font-size: 11px; text-align: left; }
+.skl-list button:hover { color: var(--fg); }
+.skl-list button.on { background: color-mix(in oklch, var(--brand) 16%, transparent); color: var(--fg); box-shadow: inset 2px 0 var(--brand); }
+.skl-list small { opacity: .6; font-size: 9px; }
+.skl-stage { min-width: 0; overflow: auto; padding: 24px 32px 32px; scrollbar-width: thin; }
+.skl-crumb { color: var(--mfg); font-size: 10px; letter-spacing: .04em; }
+.skl-head h3 { margin: 6px 0; font-size: 24px; }
+.skl-head > p:last-child { max-width: 680px; color: var(--mfg); font-size: 12px; line-height: 1.7; }
+.skl-view { margin-top: 22px; }
+.skl-view > * { animation: site-open 360ms ease-out both; }
+.skl-foot { margin-top: 8px; color: var(--mfg); font-size: 10px; }
+
+.skc-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.skc { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid color-mix(in oklch, var(--c) 45%, transparent); font-size: 11px; }
+.skc::before { content: ""; width: 6px; height: 6px; background: var(--c); }
+.skc[data-d="core"] { border-color: var(--c); background: color-mix(in oklch, var(--c) 14%, transparent); }
+.skc[data-d="touched"] { border-style: dashed; color: var(--mfg); }
+
+.skst-bar { display: flex; gap: 2px; height: 14px; margin-bottom: 20px; }
+.skst-bar i { background: var(--c); }
+.skst-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px 24px; }
+.skst-groups p { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: var(--mfg); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.skst-groups p i { width: 8px; height: 8px; background: var(--c); }
+.skst-groups p span { margin-left: auto; color: var(--fg); }
+
+.skm-wrap { overflow-x: auto; }
+.skm { border-collapse: collapse; font-size: 10px; }
+.skm thead th { vertical-align: bottom; }
+.skm thead th button { padding: 4px 2px 8px; color: var(--mfg); writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; white-space: nowrap; }
+.skm thead th button:hover, .skm thead th.on button { color: var(--brand); }
+.skm tbody th { display: flex; align-items: center; gap: 8px; padding: 3px 14px 3px 0; color: var(--mfg); font-weight: 400; white-space: nowrap; text-align: left; }
+.skm tbody th i { width: 6px; height: 6px; background: var(--c); }
+.skm tbody tr.mine th { color: var(--fg); }
+.skm td { width: 28px; height: 20px; border-left: 1px solid color-mix(in oklch, var(--border) 60%, transparent); text-align: center; }
+.skm td.on, .skm th.on { background: color-mix(in oklch, var(--brand) 10%, transparent); }
+.skm td i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.skm td[data-d="core"] i { background: var(--c); }
+.skm td[data-d="used"] i { border: 1.5px solid var(--c); }
+.skm td[data-d="touched"] i { width: 4px; height: 4px; background: var(--c); opacity: .7; }
+
+.sko svg, .skt svg { display: block; width: 100%; height: auto; }
+.sko svg { max-width: 760px; }
+.sko text, .skt text { fill: var(--mfg); font-family: inherit; font-size: 10px; }
+.sko-ring { fill: none; stroke: var(--border); stroke-dasharray: 2 5; }
+.sko-spoke { stroke-opacity: .35; }
+.sko-spoke[data-d="core"] { stroke-opacity: .7; }
+.sko-core { fill: color-mix(in oklch, var(--brand) 18%, var(--bg)); stroke: var(--brand); }
+.sko .sko-title { fill: var(--fg); font-size: 11px; font-weight: 700; }
+
+.skev { display: grid; gap: 4px; list-style: none; }
+.skev li { display: grid; grid-template-columns: 64px 180px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 8px 12px; border-left: 2px solid var(--c); background: color-mix(in oklch, var(--muted) 14%, transparent); font-size: 11px; }
+.skev-d { color: var(--mfg); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
+.skev-d[data-d="core"] { color: var(--brand); }
+.skev p { color: var(--mfg); line-height: 1.6; }
+
+.skt-year { stroke: var(--border); stroke-dasharray: 2 4; }
+.skt-item rect { fill: color-mix(in oklch, var(--mfg) 35%, transparent); }
+.skt-item.on rect { fill: var(--brand); }
+.skt-item.on text { fill: var(--fg); }
+.skt-span { stroke-opacity: .35; stroke-width: 2; }
+.skt-lane.mine text { fill: var(--fg); }
+.skt circle.on { stroke: var(--fg); stroke-width: 2; }
+.skt .skt-label { fill: var(--brand); letter-spacing: .06em; }
+.lab-skl[hidden] { display: none; }
+
+/* ── lab panel ─────────────────────────────────────────────────────── */
+#lab { position: fixed; right: 16px; bottom: 16px; z-index: 70; width: 320px; max-width: calc(100vw - 32px); max-height: calc(100svh - 32px); display: flex; flex-direction: column; border: 1px solid color-mix(in oklch, var(--brand) 55%, var(--border)); background: color-mix(in oklch, var(--bg) 94%, transparent); backdrop-filter: blur(10px); font-size: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+.lab-h { display: flex; align-items: center; justify-content: space-between; padding: 0 0 0 12px; border-bottom: 1px solid var(--border); font-weight: 700; letter-spacing: .06em; }
+.lab-h button { width: 40px; height: 36px; color: var(--mfg); }
+.lab-h button:hover { color: var(--brand); }
+#lab.closed .lab-body { display: none; }
+#lab.closed .lab-h { border: 0; }
+.lab-body { overflow: auto; padding: 4px 12px 12px; scrollbar-width: thin; }
+.lab-k { display: flex; justify-content: space-between; margin: 14px 0 6px; color: var(--mfg); letter-spacing: .06em; text-transform: uppercase; font-size: 9px; }
+.lab-k span { text-transform: none; letter-spacing: 0; opacity: .7; }
+.lab-layouts { display: grid; gap: 2px; }
+.lab-layouts button { display: flex; gap: 10px; padding: 6px 8px; text-align: left; color: var(--mfg); }
+.lab-layouts button kbd { font: inherit; color: color-mix(in oklch, var(--mfg) 60%, transparent); }
+.lab-layouts button:hover { color: var(--fg); }
+.lab-layouts button.on { background: color-mix(in oklch, var(--brand) 18%, transparent); color: var(--fg); box-shadow: inset 2px 0 var(--brand); }
+.lab-layouts button.on kbd { color: var(--brand); }
+.lab-blurb, .lab-mdesc { margin-top: 8px; padding: 8px; border-left: 1px solid var(--brand); background: var(--panel); color: var(--mfg); line-height: 1.7; }
+.lab-seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.lab-seg button, .lab-row button, .lab-stages button { padding: 5px 8px; border: 1px solid var(--border); color: var(--mfg); }
+.lab-seg button:hover, .lab-row button:hover, .lab-stages button:hover { border-color: var(--brand); color: var(--fg); }
+.lab-seg button.on { border-color: var(--brand); background: color-mix(in oklch, var(--brand) 18%, transparent); color: var(--fg); }
+.lab-stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.lab-stages button { position: relative; text-align: left; }
+.lab-stages button.done { color: var(--fg); }
+.lab-stages button.now { border-color: var(--brand); color: var(--brand); }
+.lab-stages button.held::after { content: "⏸"; position: absolute; right: 6px; }
+.lab-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.lab-row kbd { font: inherit; opacity: .5; }
+.lab-row button[disabled] { opacity: .35; pointer-events: none; }
+.lab-accents { display: flex; gap: 6px; }
+.lab-accents button { width: 26px; height: 26px; border: 1px solid var(--border); background: var(--c); }
+.lab-accents button.on { outline: 1px solid var(--fg); outline-offset: 2px; }
+.lab-check { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--mfg); cursor: pointer; }
+.lab-check input { accent-color: var(--brand); }
+.lab-foot { margin-top: 14px; color: color-mix(in oklch, var(--mfg) 70%, transparent); line-height: 1.7; }
+#toast { position: fixed; left: 50%; top: 20px; z-index: 80; transform: translate(-50%, -8px); max-width: calc(100vw - 32px); padding: 10px 14px; border: 1px solid var(--brand); background: var(--bg); color: var(--fg); font-size: 10px; opacity: 0; pointer-events: none; transition: opacity 200ms, transform 200ms; }
+#toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor, #sight-line, #sight-origin, .skel .bn-grid > .after::before { animation: none !important; }
+  #app[data-phase="ready"] .after, .editor[data-ed="typing"] .ed-buffer { animation: none; }
+}
+</style>
+</head>
+<body>
+<div id="app" class="pre"></div>
+<div id="stage"></div>
+<div id="sight" hidden aria-hidden="true">
+  <svg>
+    <defs><linearGradient id="sight-fade" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="var(--brand)" stop-opacity=".9"/><stop offset="1" stop-color="var(--brand)" stop-opacity=".25"/></linearGradient></defs>
+    <circle id="sight-origin" r="2.5" fill="var(--brand)"/>
+    <line id="sight-line" stroke="url(#sight-fade)" stroke-width="2" stroke-linecap="round" stroke-dasharray="0 9"/>
+  </svg>
+  <div id="reticle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M2 9V2H9M17 2H24V9M2 17V24H9M17 24H24V17" stroke="currentColor" stroke-width=".8"/><path d="M10 13H16M13 10V16" stroke="currentColor" stroke-width=".6"/></svg></div>
+  <span id="rlabel"></span>
+</div>
+<div id="toast" role="status"></div>
+
+<aside id="lab" aria-label="Layout lab">
+  <header class="lab-h"><span><span class="b">◉</span> LAYOUT LAB</span><button id="lab-toggle" aria-label="Collapse layout lab" title="toggle ( ` )">–</button></header>
+  <div class="lab-body">
+    <p class="lab-k">layout <span>1–6 · [ ]</span></p>
+    <div class="lab-layouts"></div>
+    <p class="lab-blurb"></p>
+    <p class="lab-k">morph <span>intro style</span></p>
+    <div class="lab-seg lab-morphs"></div>
+    <p class="lab-mdesc"></p>
+    <div class="lab-skl">
+      <p class="lab-k">skills view <span>zoomed tiles · v5</span></p>
+      <div class="lab-seg lab-sklviews"></div>
+      <p class="lab-sdesc"></p>
+      <div class="lab-row"><button data-skl-zoom="projects">zoom projects</button><button data-skl-zoom="work">work</button><button data-skl-zoom="education">education</button></div>
+    </div>
+    <p class="lab-k">stages <span>click = play &amp; hold there</span></p>
+    <div class="lab-stages"></div>
+    <div class="lab-row">
+      <button data-cmd="replay">↻ replay <kbd>r</kbd></button>
+      <button data-cmd="continue" class="lab-cont" disabled>continue ▸</button>
+      <button data-cmd="skip">skip <kbd>esc</kbd></button>
+    </div>
+    <p class="lab-k">speed</p>
+    <div class="lab-seg lab-speeds"></div>
+    <p class="lab-k">accent</p>
+    <div class="lab-accents"></div>
+    <label class="lab-check"><input type="checkbox" id="opt-intro"> play intro on layout switch</label>
+    <label class="lab-check"><input type="checkbox" id="opt-sight" checked> oculus dotted sightline + reticle</label>
+    <p class="lab-foot">site keys still work: W P E C ? and : for the command line (try <span class="b">:layout 5</span> or <span class="b">:morph eye</span>).</p>
+  </div>
+</aside>
+
+<script>
+/* ── content: copied from data/data.ts ─────────────────────────────── */
+const D = {
+  name: "PREET PATEL",
+  location: "Toronto, Ontario",
+  role: "AI Operations Developer",
+  company: "Docebo",
+  description: "Shipping agents before they ship me.",
+  links: [
+    { name: "GITHUB", href: "https://github.com/PrEEtPatEl44" },
+    { name: "LINKEDIN", href: "https://www.linkedin.com/in/preet-patel44/" },
+  ],
+  work: [{
+    company: "Docebo", role: "AI Operations Developer", period: "May 2026 - Present",
+    description: "Keeping AI agents running in production — evals, monitoring, and the plumbing in between.",
+    tags: [], link: "https://www.docebo.com",
+  }, {
+    company: "FGF Brands", role: "Software Developer Intern",
+    period: "Sept. 2024 - May 2025, Jan. 2026 - Apr. 2026",
+    description: "Shipping Internal AI tools with AI tools at light speed.",
+    tags: ["Python", "TypeScript", "Node.js", "Azure", ".NET", "C#", "PostgreSQL", "SQL Server"],
+    link: "https://fgfbrands.com",
+  }],
+  education: [{ school: "Seneca Polytechnic", program: "Computer Programming and Analysis", period: "May 2023 - Dec. 2025", link: "https://www.senecapolytechnic.ca" }],
+  projects: [
+    { title: "Reels DeepAgents", description: "Multi-agent pipeline that scripts, scores, and stitches short-form reels.", tags: ["Python", "DeepAgents", "LangGraph", "LLMs"], link: "https://github.com/PrEEtPatEl44/reels-deepagents/" },
+    { title: "Fragments", description: "Stateless REST API for chunked data on S3. Dockerized, Hurl-tested.", tags: ["Next.js", "Node.js", "Express", "TypeScript", "Jest", "Hurl", "Docker", "AWS", "S3", "EC2"], link: "#" },
+    { title: "Self-Driving Car CNN", description: "CNN that steers from raw camera frames — pixels to angles, end-to-end.", tags: ["Python", "TensorFlow", "Keras", "OpenCV"], link: "https://github.com/PrEEtPatEl44/CarSimProject", featured: true },
+    { title: "DevOps Companion", description: "Agentic bot for PM workflows on Azure DevOps. Won FGF Case Comp 2024.", tags: ["PostgreSQL", "OpenAI API", "Python", "TypeScript", "React", "Azure DevOps"], link: "#" },
+  ],
+  skills: ["React", "TypeScript", "Next.js", "Node.js", "Express", "Python", "C# / .NET", "PostgreSQL", "SQL Server", "Azure", "AWS", "Docker", "Git", "TensorFlow", "OpenCV", "Jest", "Tailwind CSS", "Figma", "Cursor", "Claude Code", "RAG", "LangChain", "LangGraph", "DeepAgents"],
+};
+const ACCENTS = [
+  { name: "red", color: "oklch(0.55 0.25 27)" },
+  { name: "orange", color: "oklch(0.65 0.2 41)" },
+  { name: "purple", color: "oklch(0.5 0.3 300)" },
+  { name: "lime", color: "oklch(0.87 0.35 142)" },
+];
+const SHORTCUTS = [["w", "work"], ["p", "projects"], ["e", "education"], ["c", "contact"]];
+const OPEN = "nvim now.ts";
+const LAUNCH = "open portfolio";
+const LINES = [
+  "// a little context before the code.",
+  "const preet = {",
+  `  name: ${JSON.stringify(D.name)},`,
+  `  role: ${JSON.stringify(D.role)},`,
+  `  at: ${JSON.stringify(D.company)},`,
+  `  basedIn: ${JSON.stringify(D.location)},`,
+  ...D.links.map((l) => `  ${l.name.toLowerCase()}: ${JSON.stringify(l.href)},`),
+  "};",
+  "",
+  `// ${D.description}`,
+];
+const SOURCE = LINES.join("\n");
+
+/* ── helpers ───────────────────────────────────────────────────────── */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ARROW = `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg>`;
+const app = $("#app");
+const stage = $("#stage");
+const store = {
+  get(k) { try { return localStorage.getItem("lab:" + k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem("lab:" + k, v); } catch {} },
+};
+
+function version() {
+  const dob = new Date(2004, 3, 4), now = new Date();
+  const before = now.getMonth() < dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate());
+  const age = now.getFullYear() - dob.getFullYear() - (before ? 1 : 0);
+  const last = new Date(before ? now.getFullYear() - 1 : now.getFullYear(), dob.getMonth(), dob.getDate());
+  return `v${age}.${String(now.getMonth() + 1).padStart(2, "0")}.${Math.floor((now - last) / 86400000)}`;
+}
+
+function hl(line) {
+  return line.split(/("(?:[^"\\]|\\.)*(?:"|$)|\/\/.*$|\bconst\b)/g).map((t) => {
+    if (!t) return "";
+    const link = D.links.find((l) => t === JSON.stringify(l.href));
+    if (link) return `<a class="src-link" href="${link.href}" target="_blank" rel="noopener">${esc(t)}</a>`;
+    const c = t.startsWith("//") ? "c-com" : t.startsWith('"') ? "c-str" : t === "const" ? "c-kw" : "";
+    return c ? `<span class="${c}">${esc(t)}</span>` : esc(t);
+  }).join("");
+}
+
+/* ── components ────────────────────────────────────────────────────── */
+let eyeCount = 0;
+function eyeSvg() {
+  const id = "oc-clip-" + ++eyeCount;
+  const almond = "M24 60 Q100 -2 176 60 Q100 122 24 60Z";
+  return `<svg class="oc-svg" viewBox="0 0 200 120" fill="none" aria-hidden="true">
+    <defs><clipPath id="${id}"><path d="${almond}"/></clipPath></defs>
+    <g stroke="currentColor" stroke-width=".65" opacity=".2">
+      <path d="M0 60H200M100 0V120" stroke-dasharray="2 5"/>
+      <path d="M8 27V14H21M179 14H192V27M8 93V106H21M179 106H192V93"/>
+      <path d="M58 13V18M79 13V16M121 13V16M142 13V18M58 102V107M79 104V107M121 104V107M142 102V107"/>
+    </g>
+    <g class="oc-lidwrap">
+      <g clip-path="url(#${id})"><g class="oc-iris">
+        <circle cx="100" cy="60" r="27" stroke="var(--brand)" stroke-width=".8" opacity=".3"/>
+        <circle cx="100" cy="60" r="21" stroke="var(--brand)" stroke-width="1.2"/>
+        <ellipse cx="100" cy="60" rx="12" ry="21" stroke="var(--brand)" stroke-width=".6" opacity=".45"/>
+        <ellipse cx="100" cy="60" rx="21" ry="8" stroke="var(--brand)" stroke-width=".6" opacity=".45"/>
+        <path d="M100 35V43M100 77V85M75 60H83M117 60H125" stroke="var(--brand)" stroke-width=".8"/>
+        <circle cx="100" cy="60" r="8" stroke="var(--brand)"/>
+        <circle cx="100" cy="60" r="2.5" fill="var(--brand)"/>
+        <circle cx="105" cy="54" r="1.5" fill="var(--fg)" opacity=".8"/>
+      </g></g>
+      <path d="${almond}" stroke="currentColor" opacity=".65"/>
+    </g>
+    <path d="M29 51Q100 -12 171 51" stroke="currentColor" stroke-width=".65" opacity=".2"/>
+    <path d="M18 60H27M173 60H182" stroke="var(--brand)"/>
+  </svg>`;
+}
+const ocHead = `<div class="oc-head"><span>oculus / 01</span><span class="oc-status">standby</span></div>`;
+const ocCoords = `<div class="oc-coords"><span><i>X</i> <b class="oc-x">----</b></span><span><i>Y</i> <b class="oc-y">----</b></span><span class="m">px</span></div>`;
+function eye(variant = "panel") {
+  return `<div class="oculus oc-panel">${ocHead}${eyeSvg()}${ocCoords}</div>`;
+}
+
+function keys(style = "stack") {
+  return `<nav class="keys keys-${style}" aria-label="Section shortcuts">${SHORTCUTS.map(([k, l]) =>
+    `<button class="key" data-go="${l}" data-key="${k}"><kbd>${k.toUpperCase()}</kbd><span>${l}</span></button>`).join("")}
+    <button class="key" data-go="help" data-key="?"><kbd>?</kbd><span>help</span></button></nav>`;
+}
+
+const utcDate = () => new Date().toISOString().slice(0, 10).replaceAll("-", ".");
+function editor({ slot = "", utc = false } = {}) {
+  return `<div class="editor" data-ed="shell">
+    <header class="ed-chrome">
+      <h1 class="ws-title"><span class="ws-prompt">❯</span><span class="ws-name">Preet Codes</span><span class="ws-path">/ portfolio</span></h1>
+      <span class="ed-slot">${slot}</span><span class="ed-version">${utc ? `<time class="ed-date" datetime="${new Date().toISOString().slice(0, 10)}">${utcDate()}</time><span class="utc-tag" title="Coordinated Universal Time">UTC</span>` : version()}</span>
+    </header>
+    <div class="ed-session">
+      <div class="ed-shell" aria-hidden="true">
+        <div class="ed-shell-title"><i></i> zsh <span class="m">/ ~/portfolio</span></div>
+        <div class="ed-prompt"><span class="b">❯</span><span class="ed-cmdtext"></span></div>
+        <p class="ed-opening">↳ opening ~/portfolio/now.ts</p>
+        <div class="ed-shell-foot">PREET CODES <span>workspace / init</span></div>
+      </div>
+      <div class="ed-buffer">
+        <div class="ed-tabs"><span class="ed-tab"><span class="b">TS</span>now.ts<span class="ed-tab-x">×</span></span><button class="ed-replay" data-cmd="replay">↻ replay</button></div>
+        <code class="ed-code"></code>
+        <div class="ed-status"><div style="display:flex"><span class="ed-mode">NORMAL</span><span class="ed-branch">⎇ main</span></div><span class="ed-file">now.ts <span>utf-8</span> <span class="ed-pos">1:1</span></span></div>
+        <form class="ed-cmdline"><span class="b">:</span><input class="ed-input" aria-label="Portfolio command" autocomplete="off" spellcheck="false"><button class="ed-enter" type="submit">enter ↵</button></form>
+      </div>
+    </div>
+    <p class="ed-msg after" role="status">ready when you are. type :help to explore.</p>
+  </div>`;
+}
+
+const tags = (list) => `<div class="tags">${list.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>`;
+const entry = (i, body) => `<article class="entry"><span class="entry-n">${String(i + 1).padStart(2, "0")}</span><div style="min-width:0;flex:1">${body}</div></article>`;
+const ZBTN = `<button class="zbtn" data-zoom title="zoom (z)"><span class="zin">⤢ z</span><span class="zout">⤡ esc</span></button>`;
+function file(sec, title, filename, type, body, { action = "", cls = "", zoom = false } = {}) {
+  action += zoom ? ZBTN : "";
+  return `<section class="file ${cls}" data-sec="${sec}" tabindex="-1"><header class="file-h"><span class="b">${type}</span><h2>${title}</h2><span class="file-path">${filename}</span>${action ? `<span class="file-act">${action}</span>` : ""}</header><div class="file-b">${body}</div></section>`;
+}
+const projectEntries = (n) => D.projects.slice(0, n).map((p, i) => entry(i,
+  `<h3><a class="lnk entry-title" href="${p.link}" target="_blank" rel="noopener">${esc(p.title)} ${ARROW}</a></h3><p class="desc" style="margin-top:8px">${esc(p.description)}</p>${tags(p.tags)}`)).join("");
+const fWork = (o) => file("work", "Work", "experience.md", "MD", D.work.map((j, i) => entry(i,
+  `<div class="entry-top"><div><h3 class="entry-title">${esc(j.role)}</h3><a class="lnk" href="${j.link}" target="_blank" rel="noopener">${esc(j.company)} ${ARROW}</a></div><span class="period">${esc(j.period)}</span></div><p class="desc">${esc(j.description)}</p>${tags(j.tags)}`)).join(""), o);
+const fEdu = (o) => file("education", "Education", "education.md", "MD", D.education.map((e, i) => entry(i,
+  `<div class="entry-top" style="margin:0"><div><h3 class="entry-title">${esc(e.program)}</h3><a class="lnk" href="${e.link}" target="_blank" rel="noopener">${esc(e.school)} ${ARROW}</a></div><span class="period">${esc(e.period)}</span></div>`)).join(""), o);
+const fProjects = (n = 2, o = {}) => file("projects", "Projects", "projects.ts", "TS", projectEntries(n),
+  { action: n < D.projects.length ? `<button class="lnk" data-act="all-projects">view all ${ARROW}</button>` : "", ...o });
+const fSkills = (o) => file("skills", "Skills", "toolbox.json", "JS", `<div class="pad">${tags(D.skills)}</div>`, o);
+const fActivity = (o) => file("activity", "Activity", "git.log", "GIT", `<div class="pad"><div class="heat"></div><p class="heat-cap">loading contributions…</p><div class="heat-stats"></div></div>`, o);
+const fContact = (o) => file("contact", "Contact", "next.md", "MD",
+  `<div class="pad"><p class="m" style="font-size:10px;margin-bottom:12px">// the next thing starts with a conversation.</p><h3 style="font-size:18px;margin-bottom:12px">Let's work together.</h3><p class="desc" style="max-width:28rem">Currently open for new opportunities and interesting projects.</p><a class="contact-btn" href="${D.links[1].href}" target="_blank" rel="noopener">get in touch ${ARROW}</a></div>`, o);
+const filesAll = (n = 2) => fWork() + fEdu() + fProjects(n) + fSkills() + fActivity() + fContact();
+const linkRow = () => D.links.map((l) => `<a class="lnk" href="${l.href}" target="_blank" rel="noopener">${l.name.toLowerCase()} ${ARROW}</a>`).join("");
+const statusFooter = (cls = "") => `<footer class="site-status ${cls}"><span><span class="b">NORMAL</span><span style="margin-left:12px">6 buffers · portfolio</span></span><span class="links">${linkRow()}</span></footer>`;
+const pad2 = (i) => String(i + 1).padStart(2, "0");
+const fDeck = (o = {}) => file("projects", "Projects", "projects.ts", "TS",
+  `<div class="pj-body"><article class="pj-detail"></article><ol class="pj-list">${D.projects.map((p, i) =>
+    `<li><button class="pj-item" data-pj="${i}"><span class="pj-i">${pad2(i)}</span><span class="pj-t">${esc(p.title)}</span>${p.featured ? `<span class="b">★</span>` : ""}<span class="pj-tags">${p.tags.slice(0, 4).join(" · ")}</span><span class="pj-bar"></span></button></li>`).join("")}</ol></div>`,
+  { action: `<span class="pj-count m"></span><button class="zbtn" data-pj-step="-1" aria-label="Previous project">‹</button><button class="zbtn" data-pj-step="1" aria-label="Next project">›</button>`, zoom: true, cls: "pj " + (o.cls || "") });
+const bigName = () => D.name.split(" ").map((w, i) => i ? `<span>${w}</span>` : w).join("<br>");
+
+/* ── layouts ───────────────────────────────────────────────────────── */
+const LAYOUTS = [
+  {
+    id: "current", name: "current",
+    blurb: "What's on design/nvim-workspace today: sticky left rail with the oculus + keycaps, editor column, files stacked underneath.",
+    html: () => `<div class="L-current"><aside class="cur-rail pane">${eye("panel")}<p class="rail-label">navigate / keys</p>${keys("stack")}</aside>
+      <div style="min-width:0"><div class="pane">${editor()}</div><div class="after stack">${filesAll()}${statusFooter()}</div></div></div>`,
+  },
+  {
+    id: "bento", name: "bento v1",
+    blurb: "Bento v1 — one screen, no scroll. Projects tile is a deck: one project in detail with all four listed below, auto-cycling (hover pauses, ←/→ steps). z — or P twice — zooms any tile over the whole grid as the 'view all' + detail view.",
+    html: () => `<div class="L-bento fit"><div class="bn-grid zoom-host">
+      <section class="bn bn-hero pane"><p class="m">// hello, world</p><h2 class="bn-name">${bigName()}</h2><p>${D.role} <span class="b">@ ${D.company}</span></p><p class="m">${D.location}</p><p class="m">${D.description}</p><div class="bn-links">${linkRow()}</div></section>
+      <div class="bn-ed pane">${editor()}</div>
+      ${fDeck({ cls: "after pane" })}
+      <div class="bn-oc pane">${eye("panel")}</div>
+      <div class="bn bn-keys pane"><p>NAVIGATE / KEYS</p>${keys("grid")}</div>
+      ${fWork({ cls: "after pane", zoom: true })}${fEdu({ cls: "after pane", zoom: true })}${fContact({ cls: "after pane", zoom: true })}${fSkills({ cls: "after pane", zoom: true })}${fActivity({ cls: "after pane", zoom: true })}
+      </div>${statusFooter("after")}</div>`,
+    mount() { pjShow(0); },
+    go: focusPane,
+  },
+  {
+    id: "bento-v2", name: "bento v2",
+    blurb: "Bento v2 — the orange tmux bar moves to the top, gutters open up (16px gaps, 24px frame), and tiles are re-proportioned so content fills them: oculus + keys share one tile, hero/projects get the tall row, activity gains streak stats. Same deck + zoom (z, P twice, ←/→).",
+    html: () => bentoV2(),
+    mount() { pjShow(0); },
+    go: focusPane,
+  },
+  {
+    id: "bento-v3", name: "bento v3",
+    blurb: "Bento v3 — v2's grid, but while now.ts is typing every other tile shows a shimmering skeleton of its shape (header, lines, tag pills) instead of empty space, then they resolve one by one when the script launches. Pairs with the new 'eye + title' morph.",
+    html: () => bentoV2("v3 skel"),
+    mount() { pjShow(0); },
+    go: focusPane,
+  },
+  {
+    id: "bento-v4", name: "bento v4",
+    blurb: "Bento v4 — v3 (skeleton loading) with the editor's version slot replaced by today's date in UTC, tagged with a UTC chip so it's clear it isn't local time. Pairs with the 'eye + title' morph.",
+    html: () => bentoV2("v3 v4 skel", { utc: true }),
+    mount() { pjShow(0); },
+    go: focusPane,
+  },
+  {
+    id: "bento-v5", name: "bento v5 · skills lab",
+    blurb: "Bento v4 with Projects, Work and Education swapped for lab tiles. Zoom one (P P, W W, E E, or the buttons below) and flip 'skills view' to compare how the skills behind each item are shown. Education lists Seneca course work found on GitHub, by term, plus certifications.",
+    html: () => bentoV2("v3 v4 skel", { utc: true }, { skl: true }),
+    mount() { renderAllSkl(); },
+    go: focusPane,
+  },
+];
+
+function bentoV2(cls = "", ed = {}, { skl = false } = {}) {
+  return `<div class="L-bento v2 fit ${cls}">
+      <header class="tm-bar pane"><span class="tm-sess">[portfolio]</span><span class="tm-win-tab">0:main*</span><span>z zoom · ←/→ projects · w/p/e/c focus · : command</span><span class="tm-load"></span><span class="tm-right">"preet@toronto" ${new Date().toTimeString().slice(0, 5)}</span></header>
+      <div class="bn-grid zoom-host">
+      <section class="bn bn-hero pane"><p class="m">// hello, world</p><h2 class="bn-name">${bigName()}</h2><p>${D.role} <span class="b">@ ${D.company}</span></p><p class="m">${D.location}</p><p class="m">${D.description}</p><div class="bn-links">${linkRow()}</div></section>
+      <div class="bn-ed pane">${editor(ed)}</div>
+      ${skl ? sklTile("projects") : fDeck({ cls: "after pane" })}
+      <div class="bn bn-ock pane">${eye("panel")}<div><p class="rail-label">NAVIGATE / KEYS</p>${keys("stack")}</div></div>
+      ${skl ? sklTile("work") + sklTile("education") : fWork({ cls: "after pane", zoom: true }) + fEdu({ cls: "after pane", zoom: true })}${fContact({ cls: "after pane", zoom: true })}${fSkills({ cls: "after pane", zoom: true })}${fActivity({ cls: "after pane", zoom: true })}
+      </div></div>`;
+}
+
+/* ── skills lab (bento v5): how zoomed tiles show the skills behind each item ── */
+const SKILL_CATS = {
+  lang: { label: "Languages", hue: 55 },
+  fe: { label: "Frontend", hue: 205 },
+  be: { label: "Backend", hue: 150 },
+  ai: { label: "AI & agents", hue: 310 },
+  data: { label: "Data", hue: 270 },
+  cloud: { label: "Cloud & DevOps", hue: 235 },
+  ml: { label: "ML & vision", hue: 100 },
+  game: { label: "Graphics & games", hue: 20 },
+  practice: { label: "Practices", hue: null },
+};
+const SKILL_CAT = {
+  Python: "lang", TypeScript: "lang", JavaScript: "lang", "C#": "lang", "C++": "lang", C: "lang", SQL: "lang",
+  HTML: "fe", CSS: "fe", React: "fe", "Next.js": "fe", "Tailwind CSS": "fe", "shadcn/ui": "fe", EJS: "fe", Vite: "fe", LaTeX: "fe",
+  "Node.js": "be", Express: "be", FastAPI: "be", Flask: "be", ".NET": "be", "REST APIs": "be", "EF Core": "be",
+  "Agentic AI": "ai", LangGraph: "ai", LangChain: "ai", RAG: "ai", MCP: "ai", "LLM integration": "ai", "AI SDK": "ai",
+  "Azure AI Foundry": "ai", ChromaDB: "ai", Pinecone: "ai", "Context management": "ai", "Model evaluations": "ai", "Claude Code": "ai",
+  "SQL Server": "data", "Cosmos DB": "data", DynamoDB: "data", "Data integrity": "data", "Database management": "data", "File I/O": "data",
+  AWS: "cloud", Azure: "cloud", "Azure DevOps": "cloud", Docker: "cloud", "GitHub Actions": "cloud", Vercel: "cloud",
+  TensorFlow: "ml", OpenCV: "ml", NumPy: "ml", Jupyter: "ml",
+  OpenTK: "game", GLSL: "game", "Game loops": "game",
+};
+const catOf = (name) => SKILL_CAT[name] ?? "practice";
+const catColor = (cat) => (SKILL_CATS[cat].hue === null ? "oklch(0.78 0 0)" : `oklch(0.74 0.14 ${SKILL_CATS[cat].hue})`);
+const DEPTH_W = { core: 3, used: 2, touched: 1 };
+const byDepth = (a, b) => DEPTH_W[b.depth] - DEPTH_W[a.depth];
+const sk = (...rows) => rows.map(([name, depth, line = ""]) => ({ name, depth, line, cat: catOf(name) }));
+const GH = (repo) => ({ label: "github", href: `https://github.com/PrEEtPatEl44/${repo}` });
+
+/** Lab data: projects and work mirror the wiki; school comes from Seneca-era GitHub repos. */
+const SKL = {
+  projects: {
+    items: [
+      { title: "Reels DeepAgents", short: "Reels", period: "Apr. 2026", start: "2026-04", end: "2026-04", link: GH("reels-deepagents"), note: "Topic prompt → narrated, rendered short-form video through a graph of agents.",
+        skills: sk(["LangGraph", "core", "Orchestrates eight async stages as a LangGraph state graph."], ["LangChain", "core", "Deep agents for scripting, design and build."], ["Agentic AI", "core", "ReAct research agents plus deep agents that choose their own references."], ["Python", "core", "asyncio throughout."], ["ChromaDB", "core", "Per-project design memory agents reuse."], ["RAG", "used", "Retrieves past designs ranked by user ratings."], ["Context management", "used", "Each agent sees only its sandboxed project files."], ["LLM integration", "used", "Claude drives the creative stages."]) },
+      { title: "Prepify", short: "Prepify", period: "May 2025 – Feb. 2026", start: "2025-05", end: "2026-02", link: GH("Prepify"), note: "AI career-prep platform: track applications, manage resumes, generate tailored resumes from LaTeX templates. (From GitHub, not on the site yet.)",
+        skills: sk(["Next.js", "core", "App built on Next.js."], ["TypeScript", "core", "Typed end to end."], ["React", "used", "Application UI."], ["LLM integration", "used", "Tailors resumes to job descriptions."], ["LaTeX", "used", "Resume templates rendered from LaTeX."]) },
+      { title: "Fragments", short: "Fragments", period: "May – Aug. 2025", start: "2025-05", end: "2025-08", link: GH("fragments"), note: "REST microservice storing and converting fragments across 10+ formats on AWS.",
+        skills: sk(["Node.js", "core", "Service runtime."], ["Express", "core", "HTTP layer."], ["REST APIs", "core", "Store and convert across 10+ MIME types."], ["AWS", "core", "S3, DynamoDB, EC2 and Cognito."], ["Docker", "core", "Containerized service and UI."], ["GitHub Actions", "core", "CI running tests on every push."], ["Testing", "core", "Jest unit tests plus Hurl integration tests."], ["DynamoDB", "used", "Fragment metadata."], ["React", "used", "fragments-ui companion app."], ["Vite", "used", "UI tooling."], ["Security practices", "used", "Hashed owner ids isolate each user's data."]) },
+      { title: "DevOps Companion", short: "DevOps", period: "May – Aug. 2025", start: "2025-05", end: "2025-08", link: GH("DevOps-Companion"), note: "Reads Azure DevOps work items to flag risks and draft updates. Enhanced from the FGF case-competition winner.",
+        skills: sk(["Azure DevOps", "core", "Reads work items: deadlines, priority, status."], ["Azure AI Foundry", "core", "Spots risks and blockers, drafts stakeholder emails."], ["Next.js", "used", "Chat-style frontend."], ["TypeScript", "used", "Frontend code."], ["Python", "used", "Analysis services."], ["Flask", "used", "Python backend (GitHub topic: flask)."], ["LLM integration", "used", "Conversational task updates."]) },
+      { title: "Self-Driving Car CNN", short: "CarSim", period: "Aug. 2025", start: "2025-08", end: "2025-08", link: GH("CarSimProject"), note: "CNN that predicts steering angles from camera frames to drive a simulator.",
+        skills: sk(["TensorFlow", "core", "Trained the steering CNN in Keras."], ["OpenCV", "core", "Frame preprocessing."], ["Python", "core", "Training pipeline and live control server."], ["NumPy", "used", "Dataset handling."]) },
+    ],
+  },
+  work: {
+    items: [
+      { group: "Docebo", title: "Internal AI applications", short: "AI apps", period: "May 2026 – now", start: "2026-05", end: "2026-10", note: "Full-stack AI apps for go-to-market and operations teams.",
+        skills: sk(["TypeScript", "core", "Apps built end to end in TypeScript."], ["AI SDK", "core", "Streams model output and tool calls."], ["AWS", "core", "Agent workloads, data and integrations."], ["Python", "core", "Agent and data services."], ["Vercel", "used", "Ships and previews internal tools."], ["Database management", "used", "Data stores behind the apps."]) },
+      { group: "Docebo", title: "Agents for business workflows", short: "Agents", period: "May 2026 – now", start: "2026-05", end: "2026-10", note: "Agents that take over repeatable work across sales, marketing and operations.",
+        skills: sk(["Agentic AI", "core", "Agents for repeatable GTM and ops work."], ["LangGraph", "core", "Multi-step workflows with explicit state."], ["Context management", "core", "What each agent sees, so answers stay grounded."], ["Model evaluations", "core", "Accuracy checks that catch regressions."], ["LangChain", "used", "Model, tool and retrieval integrations."]) },
+      { group: "Docebo", title: "AI governance & transformation", short: "Governance", period: "May 2026 – now", start: "2026-05", end: "2026-10", note: "How AI is adopted, secured and governed across the business.",
+        skills: sk(["AI governance", "core", "How AI tools are approved and monitored."], ["Security practices", "core", "Access, secrets and data rules before shipping."], ["Data integrity", "core", "Validated inputs and outputs across integrations."], ["Knowledge management", "core", "Curated sources agents and people rely on."], ["AI enablement", "core", "Playbooks, prompt libraries, build sessions."]) },
+      { group: "FGF Brands", title: "Authorization management platform", short: "AuthZ", period: "Jan. – Apr. 2026", start: "2026-01", end: "2026-04", note: "Role-based permissions for every company app.",
+        skills: sk(["Auth & RBAC", "core", "Permission model with Entra ID SSO and service API keys."], [".NET", "core", "The Web API at the platform's core."], ["MCP", "core", "Permission checks exposed as agent tools."], ["EF Core", "used", "Permission hierarchy model."], ["SQL Server", "used", "Azure SQL storage."], ["Next.js", "used", "Management UI prototype."]) },
+      { group: "FGF Brands", title: "Product holds platform", short: "Holds", period: "Jan. – Apr. 2026", start: "2026-01", end: "2026-04", note: "Holds management for food manufacturing, usable by people, REST clients and agents.",
+        skills: sk(["Next.js", "core", "Static frontend served from one App Service."], ["React", "core", "Holds UI."], ["TypeScript", "core", "Frontend end to end."], ["FastAPI", "core", "REST, SPA and MCP side by side."], ["Python", "core", "Backend with Pydantic validation."], ["MCP", "core", "Agents query and act on holds data."], ["Azure", "core", "App Service and Key Vault."], ["Azure DevOps", "core", "CI/CD pipelines."], ["Auth & RBAC", "used", "Entra ID SSO with MSAL.js."], ["Tailwind CSS", "used", "Styling."], ["Docker", "touched", "Local SQL Server."]) },
+      { group: "FGF Brands", title: "Distributor portals", short: "Portals", period: "Sept. 2024 – May 2025", start: "2024-09", end: "2025-05", note: "Replaced legacy IBM systems for 20,000+ distributors.",
+        skills: sk([".NET", "core", "Secure backend services for reports and documents."], ["C#", "core", "Portal backends."], ["REST APIs", "core", "Auth and data-access layers."], ["SQL Server", "core", "Tuned stored procedures for reporting."], ["SQL", "core", "Reporting queries."], ["React", "used", "Portal interfaces."], ["Cosmos DB", "used", "High-throughput distributor data."], ["Azure", "used", "Functions for background work."]) },
+      { group: "FGF Brands", title: "AI policy assistant", short: "Policy AI", period: "Sept. 2024 – May 2025", start: "2024-09", end: "2025-05", note: "Answers distributor policy questions from company documents.",
+        skills: sk(["LLM integration", "core", "Conversational policy answers."], ["RAG", "core", "Grounded in company documents."], ["LangChain", "used", "Retrieval and prompting."], ["Pinecone", "used", "Semantic search index."], ["Azure AI Foundry", "used", "Model hosting."], ["Python", "used", "Retrieval services."]) },
+      { group: "FGF Brands", title: "AI-assisted development", short: "Enablement", period: "Jan. – Apr. 2026", start: "2026-01", end: "2026-04", note: "Made AI coding assistants part of how the team ships.",
+        skills: sk(["AI enablement", "core", "Coached devs and analysts to ship with AI."], ["Claude Code", "core", "The team's main workflow, with CLAUDE.md files."], ["Knowledge management", "used", "Shared context files and starter repos."], ["Context management", "used", "Project context that keeps output on-standard."]) },
+    ],
+  },
+  education: {
+    items: [
+      { group: "Fall 2023", title: "Clinic Management System", short: "Clinic", period: "Oct. 2023", start: "2023-10", end: "2023-10", link: GH("Clinic-Management-System"), note: "Text-file CRUD console application.",
+        skills: sk(["C", "core", "Console app in C."], ["File I/O", "core", "Records persisted to text files."], ["Data structures", "used", "Structs and arrays for patients and appointments."]) },
+      { group: "Fall 2023", title: "Web fundamentals", short: "Web 1", period: "Nov. – Dec. 2023", start: "2023-11", end: "2023-12", link: GH("WEB"), note: "Profile card, Banana Music and an iOS calculator clone, hosted on Vercel.",
+        skills: sk(["HTML", "core", "Page structure."], ["CSS", "core", "Layout and styling."], ["JavaScript", "core", "Calculator and music-app logic."], ["Vercel", "touched", "Hosted the sites."]) },
+      { group: "Winter 2024", title: "OOP244 (C++)", short: "OOP244", period: "Jan. – Feb. 2024", start: "2024-01", end: "2024-02", link: GH("OOP-244"), note: "Object-oriented programming coursework in C++.",
+        skills: sk(["C++", "core", "Course workshops and labs."], ["OOP", "core", "Classes, inheritance, polymorphism."]) },
+      { group: "Winter 2024", title: "Aid Management System", short: "Aid Mgmt", period: "Jan. 2024", start: "2024-01", end: "2024-01", link: GH("Aid-Management-system"), note: "OOP term project in C++.",
+        skills: sk(["C++", "core", "Full term project."], ["OOP", "core", "Class hierarchy for items."], ["File I/O", "used", "Inventory persisted to files."]) },
+      { group: "Winter 2024", title: "Sorting Visualizer", short: "Sorting", period: "Jan. – Feb. 2024", start: "2024-01", end: "2024-02", link: GH("Sorting-Visualizer"), note: "Animated bubble, selection and other sorts.",
+        skills: sk(["JavaScript", "core", "Animation and controls."], ["Algorithms", "core", "Sorting algorithms step by step."], ["HTML", "used"], ["CSS", "used"]) },
+      { group: "Winter 2024", title: "WEB322 final project", short: "WEB322", period: "Apr. 2024", start: "2024-04", end: "2024-04", link: GH("ProjectFinalWEB322"), note: "Server-rendered web app for WEB322.",
+        skills: sk(["Node.js", "core", "Server runtime."], ["Express", "core", "Routes and middleware."], ["EJS", "core", "Server-rendered views."], ["JavaScript", "used"], ["CSS", "used"]) },
+      { group: "Summer 2025", title: "CVI620 assignments", short: "CVI620", period: "May – July 2025", start: "2025-05", end: "2025-07", link: GH("CVI620_assignments"), note: "Computer vision coursework in notebooks.",
+        skills: sk(["Python", "core", "Assignments."], ["OpenCV", "core", "Image processing."], ["Jupyter", "used", "Notebook workflow."], ["NumPy", "used", "Array maths."]) },
+      { group: "Summer 2025", title: "Self-Driving Car CNN", short: "CarSim", period: "Aug. 2025", start: "2025-08", end: "2025-08", link: GH("CarSimProject"), note: "Computer vision term project (also under Projects).",
+        skills: sk(["TensorFlow", "core", "Steering CNN."], ["OpenCV", "core", "Preprocessing."], ["Python", "core"]) },
+      { group: "Fall 2025", title: "GAM531 assignments", short: "GAM531", period: "Sept. – Nov. 2025", start: "2025-09", end: "2025-11", link: GH("GAM531-NSA-Assignment1"), note: "Graphics programming assignments with OpenTK.",
+        skills: sk(["C#", "core", "Assignments."], ["OpenTK", "core", "OpenGL bindings for .NET."], ["GLSL", "used", "Shaders."]) },
+      { group: "Fall 2025", title: "The Torch Runner", short: "Torch", period: "Oct. 2025", start: "2025-10", end: "2025-10", link: GH("GAM531-Midterm-Game-TheTorchRunner"), note: "Midterm game: find the treasure in a dark maze by torchlight.",
+        skills: sk(["C#", "core", "Game code."], ["OpenTK", "core", "Rendering."], ["GLSL", "core", "Torch-lighting shaders."], ["Game loops", "core", "Input, update, render."]) },
+      { group: "Certifications", title: "Building with the Claude API", short: "Claude API", period: "2026", start: "2026-01", end: "2026-01", link: { label: "verify", href: "https://verify.skilljar.com/c/dyhibfqrtwit" }, note: "Anthropic.",
+        skills: sk(["LLM integration", "touched", "Prompting, tool use and retrieval."], ["Agentic AI", "touched", "Agent patterns with Claude."]) },
+      { group: "Certifications", title: "Claude Code in Action", short: "Claude Code", period: "2026", start: "2026-01", end: "2026-01", link: { label: "verify", href: "https://verify.skilljar.com/c/pnv6mo8ndm3s" }, note: "Anthropic.",
+        skills: sk(["Claude Code", "used", "Agentic coding workflows."]) },
+      { group: "Certifications", title: "Web Developer Bootcamp", short: "Bootcamp", period: "2023", start: "2023-06", end: "2023-06", link: { label: "verify", href: "https://www.udemy.com/certificate/UC-b8740ccc-9885-457b-b04f-7975f05b024d/" }, note: "Udemy · Dr. Angela Yu.",
+        skills: sk(["JavaScript", "used", "Full-stack bootcamp."], ["Node.js", "touched"], ["Express", "touched"]) },
+      { group: "Certifications", title: "Data Structures & OOP with C++", short: "C++ DS", period: "2023", start: "2023-06", end: "2023-06", note: "OCSALY Academy.",
+        skills: sk(["C++", "used"], ["Data structures", "used"], ["OOP", "used"]) },
+    ],
+  },
+};
+
+const SKL_VIEWS = {
+  chips: { name: "chips", desc: "Baseline, what's in production: depth-sorted chips. Core = solid, used = outline, touched = dashed. Colour = category." },
+  stack: { name: "stack bar", desc: "GitHub-language style: one bar showing the mix of categories (weighted by depth), then chips grouped by category with their share." },
+  matrix: { name: "matrix", desc: "Every item in the tile as a column, every skill as a row. Overlap is visible at a glance; the selected item's column is lit." },
+  orbit: { name: "orbit", desc: "The item at the centre with its skills orbiting it, sized by depth and coloured by category." },
+  evidence: { name: "evidence", desc: "Readable list: each skill next to the one line of what was actually done with it." },
+  timeline: { name: "timeline", desc: "Items on a time axis with skill swimlanes underneath: shows the stack growing over time. Strongest for school + certs." },
+};
+const sklSel = { projects: 0, work: 0, education: 0 };
+const monthIx = (yyyymm) => { const [y, m] = yyyymm.split("-").map(Number); return y * 12 + m - 1; };
+
+const chip = (s) => `<span class="skc" data-d="${s.depth}" style="--c:${catColor(s.cat)}" title="${esc(s.name)} · ${s.depth}">${esc(s.name)}</span>`;
+
+const SKL_RENDER = {
+  chips: (it) => `<div class="skc-row">${[...it.skills].sort(byDepth).map(chip).join("")}</div>`,
+
+  stack(it) {
+    const totals = {};
+    let sum = 0;
+    for (const s of it.skills) { totals[s.cat] = (totals[s.cat] || 0) + DEPTH_W[s.depth]; sum += DEPTH_W[s.depth]; }
+    const cats = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    const pct = (v) => Math.round((v / sum) * 100);
+    return `<div class="skst-bar">${cats.map(([c, v]) => `<i style="flex:${v};--c:${catColor(c)}" title="${SKILL_CATS[c].label} ${pct(v)}%"></i>`).join("")}</div>
+      <div class="skst-groups">${cats.map(([c, v]) => `<div><p><i style="--c:${catColor(c)}"></i>${SKILL_CATS[c].label}<span>${pct(v)}%</span></p><div class="skc-row">${it.skills.filter((s) => s.cat === c).sort(byDepth).map(chip).join("")}</div></div>`).join("")}</div>`;
+  },
+
+  matrix(it, items, kind) {
+    const counts = new Map();
+    items.forEach((x) => x.skills.forEach((s) => counts.set(s.name, (counts.get(s.name) || 0) + 1)));
+    const mine = new Set(it.skills.map((s) => s.name));
+    const rows = [...counts.keys()].sort((a, b) => (mine.has(b) - mine.has(a)) || (counts.get(b) - counts.get(a)) || a.localeCompare(b));
+    const shown = rows.slice(0, 24);
+    const sel = items.indexOf(it);
+    return `<div class="skm-wrap"><table class="skm">
+      <thead><tr><th></th>${items.map((x, i) => `<th class="${i === sel ? "on" : ""}"><button data-skl-item="${i}" title="${esc(x.title)}">${esc(x.short || x.title)}</button></th>`).join("")}</tr></thead>
+      <tbody>${shown.map((name) => `<tr class="${mine.has(name) ? "mine" : ""}"><th><i style="--c:${catColor(catOf(name))}"></i>${esc(name)}</th>${items.map((x, i) => {
+        const s = x.skills.find((k) => k.name === name);
+        return `<td class="${i === sel ? "on" : ""}" ${s ? `data-d="${s.depth}" style="--c:${catColor(s.cat)}"` : ""}>${s ? "<i></i>" : ""}</td>`;
+      }).join("")}</tr>`).join("")}</tbody></table>
+      ${rows.length > shown.length ? `<p class="skl-foot">+${rows.length - shown.length} more skills in this tile</p>` : ""}
+      <p class="skl-foot">● core · ◯ used · · touched</p></div>`;
+  },
+
+  orbit(it) {
+    const W = 720, H = 380, cx = W / 2, cy = H / 2;
+    const skills = [...it.skills].sort((a, b) => a.cat.localeCompare(b.cat) || byDepth(a, b));
+    const n = skills.length;
+    const nodes = skills.map((s, i) => {
+      const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const ring = s.depth === "core" ? 1 : s.depth === "used" ? 1.18 : 1.32;
+      return { ...s, x: cx + Math.cos(a) * 210 * ring, y: cy + Math.sin(a) * 120 * ring, r: s.depth === "core" ? 8 : s.depth === "used" ? 5.5 : 3.5, right: Math.cos(a) >= 0 };
+    });
+    return `<div class="sko"><svg viewBox="0 0 ${W} ${H}">
+      <ellipse cx="${cx}" cy="${cy}" rx="210" ry="120" class="sko-ring"/><ellipse cx="${cx}" cy="${cy}" rx="248" ry="142" class="sko-ring"/>
+      ${nodes.map((s) => `<line x1="${cx}" y1="${cy}" x2="${s.x.toFixed(1)}" y2="${s.y.toFixed(1)}" stroke="${catColor(s.cat)}" class="sko-spoke" data-d="${s.depth}"/>`).join("")}
+      <circle cx="${cx}" cy="${cy}" r="34" class="sko-core"/>
+      <text x="${cx}" y="${cy + 4}" text-anchor="middle" class="sko-title">${esc((it.short || it.title).slice(0, 14))}</text>
+      ${nodes.map((s) => `<g><circle cx="${s.x.toFixed(1)}" cy="${s.y.toFixed(1)}" r="${s.r}" fill="${s.depth === "used" ? "var(--bg)" : catColor(s.cat)}" stroke="${catColor(s.cat)}" stroke-width="1.6"/>
+        <text x="${(s.x + (s.right ? 12 : -12)).toFixed(1)}" y="${(s.y + 3.5).toFixed(1)}" text-anchor="${s.right ? "start" : "end"}">${esc(s.name)}</text></g>`).join("")}
+    </svg></div>`;
+  },
+
+  evidence: (it) => `<ul class="skev">${[...it.skills].sort(byDepth).map((s) => `<li style="--c:${catColor(s.cat)}"><span class="skev-d" data-d="${s.depth}">${s.depth}</span><b>${esc(s.name)}</b><p>${esc(s.line || "—")}</p></li>`).join("")}</ul>`,
+
+  timeline(it, items) {
+    const start = Math.min(...items.map((x) => monthIx(x.start)));
+    const end = Math.max(...items.map((x) => monthIx(x.end))) + 1;
+    const W = 860, L = 150, R = 20, row = 15;
+    const x = (m) => L + ((m - start) / (end - start)) * (W - L - R);
+    const counts = new Map();
+    items.forEach((i) => i.skills.forEach((s) => counts.set(s.name, (counts.get(s.name) || 0) + 1)));
+    const mine = new Set(it.skills.map((s) => s.name));
+    const lanes = [...counts.keys()].sort((a, b) => (mine.has(b) - mine.has(a)) || counts.get(b) - counts.get(a)).slice(0, 14);
+    const top = 26, itemsH = items.length * row, lanesTop = top + itemsH + 26;
+    const H = lanesTop + lanes.length * row + 10;
+    const years = [];
+    for (let m = start; m <= end; m++) if (m % 12 === 0) years.push(m);
+    const sel = items.indexOf(it);
+    return `<div class="skt"><svg viewBox="0 0 ${W} ${H}">
+      ${years.map((m) => `<line x1="${x(m)}" x2="${x(m)}" y1="14" y2="${H}" class="skt-year"/><text x="${x(m) + 4}" y="12">${Math.floor(m / 12)}</text>`).join("")}
+      ${items.map((i, n) => `<g class="skt-item${n === sel ? " on" : ""}"><text x="${L - 8}" y="${top + n * row + 9}" text-anchor="end">${esc(i.short || i.title)}</text>
+        <rect x="${x(monthIx(i.start))}" y="${top + n * row + 2}" width="${Math.max(6, x(monthIx(i.end) + 1) - x(monthIx(i.start)))}" height="9"/></g>`).join("")}
+      <text x="${L - 8}" y="${lanesTop - 8}" text-anchor="end" class="skt-label">skills</text>
+      ${lanes.map((name, n) => {
+        const uses = items.map((i, ix) => ({ i, ix, s: i.skills.find((k) => k.name === name) })).filter((u) => u.s);
+        const mids = uses.map((u) => (x(monthIx(u.i.start)) + x(monthIx(u.i.end) + 1)) / 2);
+        const y = lanesTop + n * row + 6;
+        const c = catColor(catOf(name));
+        return `<g class="skt-lane${mine.has(name) ? " mine" : ""}"><text x="${L - 8}" y="${y + 3}" text-anchor="end">${esc(name)}</text>
+          <line x1="${Math.min(...mids)}" x2="${Math.max(...mids)}" y1="${y}" y2="${y}" stroke="${c}" class="skt-span"/>
+          ${uses.map((u, k) => `<circle cx="${mids[k]}" cy="${y}" r="${u.s.depth === "core" ? 4.5 : u.s.depth === "used" ? 3.5 : 2.5}" fill="${u.s.depth === "used" ? "var(--bg)" : c}" stroke="${c}" stroke-width="1.4" class="${u.ix === sel ? "on" : ""}"/>`).join("")}</g>`;
+      }).join("")}
+    </svg></div>`;
+  },
+};
+
+function renderSkl(kind) {
+  const host = $(`#app .skl-zoom[data-kind="${kind}"]`);
+  if (!host) return;
+  const items = SKL[kind].items;
+  const sel = Math.min(sklSel[kind], items.length - 1);
+  const it = items[sel];
+  const groups = [...new Set(items.map((i) => i.group ?? ""))];
+  host.innerHTML = `<nav class="skl-list">${groups.map((g) => `${g ? `<h4>${esc(g)}</h4>` : ""}${items.map((i, n) => (i.group ?? "") === g
+    ? `<button data-skl-item="${n}" class="${n === sel ? "on" : ""}"><span>${esc(i.title)}</span><small>${i.skills.length}</small></button>` : "").join("")}`).join("")}</nav>
+    <div class="skl-stage">
+      <header class="skl-head"><p class="skl-crumb">${esc(it.group ?? "project")} · ${esc(it.period)}${it.link ? ` · <a class="lnk" href="${it.link.href}" target="_blank" rel="noopener">${it.link.label} ${ARROW}</a>` : ""}</p>
+        <h3>${esc(it.title)}</h3><p>${esc(it.note)}</p></header>
+      <div class="skl-view">${SKL_RENDER[state.sklView](it, items, kind)}</div>
+    </div>`;
+}
+const renderAllSkl = () => Object.keys(SKL).forEach(renderSkl);
+
+function sklTile(kind) {
+  const items = SKL[kind].items;
+  const small = {
+    projects: `<ol class="skl-mini">${items.map((i, n) => `<li><span class="b">${pad2(n)}</span><span>${esc(i.title)}</span><span class="m">${esc(i.period)}</span></li>`).join("")}</ol>`,
+    work: `<ol class="skl-mini">${[...new Set(items.map((i) => i.group))].map((g) => `<li class="skl-mini-group"><span class="b">●</span><span>${esc(g)}</span><span class="m">${items.filter((i) => i.group === g).length} pieces</span></li>${items.filter((i) => i.group === g).map((i) => `<li class="skl-mini-sub"><span>${esc(i.title)}</span></li>`).join("")}`).join("")}</ol>`,
+    education: `<ol class="skl-mini"><li class="skl-mini-group"><span class="b">●</span><span>Seneca · CPA</span><span class="m">2023–25</span></li>${[...new Set(items.map((i) => i.group))].map((g) => `<li class="skl-mini-sub"><span>${esc(g)}</span><span class="m">${items.filter((i) => i.group === g).length}</span></li>`).join("")}</ol>`,
+  }[kind];
+  const meta = { projects: ["Projects", "projects.ts", "TS"], work: ["Work", "experience.md", "MD"], education: ["Education", "credentials.md", "MD"] }[kind];
+  return file(kind, meta[0], meta[1], meta[2], `<div class="skl-small">${small}</div><div class="skl-zoom" data-kind="${kind}"></div>`, { cls: "after pane skl-tile", zoom: true });
+}
+
+/* ── fit layouts: focus, zoom, project deck ────────────────────────── */
+let zoomed = null, focused = null, pjIndex = 0, pjTimer;
+const paneOf = (el) => el?.closest(".zoom-host > *");
+function setFocus(pane) {
+  focused = pane;
+  $$("#app .focus").forEach((p) => p !== pane && p.classList.remove("focus"));
+  pane?.classList.add("focus");
+}
+function focusPane(t) {
+  const pane = paneOf($(`#app [data-sec="${t}"]`));
+  if (!pane) return;
+  if (focused === pane && !zoomed) return zoom(pane);
+  setFocus(pane);
+  pane.classList.remove("pulse"); void pane.offsetWidth; pane.classList.add("pulse");
+}
+function insetOf(el, host) {
+  const h = host.getBoundingClientRect(), r = el.getBoundingClientRect();
+  return `inset(${r.top - h.top}px ${h.right - r.right}px ${h.bottom - r.bottom}px ${r.left - h.left}px)`;
+}
+function zoom(pane) {
+  if (!pane) return;
+  if (zoomed) { const was = zoomed; unzoom(); if (was === pane) return; }
+  const host = pane.closest(".zoom-host"), from = insetOf(pane, host);
+  pane.classList.add("zoomed"); zoomed = pane; setFocus(pane);
+  pane.animate([{ clipPath: from }, { clipPath: "inset(0 0 0 0)" }], { duration: 420, easing: "cubic-bezier(.22,1,.36,1)" });
+  schedule();
+}
+function unzoom(instant = false) {
+  const pane = zoomed; if (!pane) return;
+  zoomed = null;
+  if (instant) return pane.classList.remove("zoomed");
+  const host = pane.closest(".zoom-host");
+  pane.classList.remove("zoomed"); const to = insetOf(pane, host); pane.classList.add("zoomed");
+  pane.animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: to }], { duration: 320, easing: "cubic-bezier(.22,1,.36,1)" })
+    .finished.then(() => { pane.classList.remove("zoomed"); schedule(); });
+}
+function pjShow(i, manual = false) {
+  const n = D.projects.length;
+  pjIndex = (i + n) % n;
+  const p = D.projects[pjIndex];
+  $$("#app .pj").forEach((pj) => {
+    $(".pj-detail", pj).innerHTML = `<div class="pj-top"><span class="proj-n">${pad2(pjIndex)}</span>${p.featured ? `<span class="proj-feat">★ FEATURED</span>` : ""}</div>
+      <h3>${esc(p.title)}</h3><p>${esc(p.description)}</p>${tags(p.tags)}
+      <a class="lnk pj-open" href="${p.link}" target="_blank" rel="noopener">${p.link === "#" ? "private repo" : "open repo"} ${ARROW}</a>`;
+    $$(".pj-item", pj).forEach((b, j) => b.classList.toggle("on", j === pjIndex));
+    $(".pj-count", pj).textContent = `${pad2(pjIndex)} / ${pad2(n - 1)}`;
+    if (manual) {
+      pj.dataset.auto = "off";
+      clearTimeout(pjTimer); pjTimer = setTimeout(() => delete pj.dataset.auto, 12000);
+    }
+  });
+}
+document.addEventListener("animationend", (e) => { if (e.animationName === "pj-fill") pjShow(pjIndex + 1); });
+document.addEventListener("pointerdown", (e) => { const pane = paneOf(e.target.closest("#app .zoom-host *")); if (pane) setFocus(pane); });
+/* ── activity heatmap ──────────────────────────────────────────────── */
+let heatData = null;
+const heatReq = fetch("https://github-contributions-api.jogruber.de/v4/PrEEtPatEl44?y=last")
+  .then((r) => r.json()).then((j) => (heatData = { days: j.contributions, total: j.contributions.reduce((a, d) => a + d.count, 0), real: true }))
+  .catch(() => {
+    let s = 7;
+    const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+    const days = Array.from({ length: 365 }, () => { const r = rnd(); return { level: r < .45 ? 0 : r < .7 ? 1 : r < .85 ? 2 : r < .95 ? 3 : 4 }; });
+    heatData = { days, real: false };
+  });
+function fillHeat() {
+  heatReq.then(() => $$(".heat").forEach((h) => {
+    if (h.childElementCount) return;
+    h.innerHTML = heatData.days.map((d) => `<i data-l="${d.level}"></i>`).join("");
+    h.nextElementSibling.textContent = heatData.real ? `${heatData.total} contributions in the last year · @PrEEtPatEl44` : "offline sample — couldn't reach the contributions API";
+    const levels = heatData.days.map((d) => d.count ?? d.level);
+    let best = 0, run = 0;
+    for (const n of levels) { run = n > 0 ? run + 1 : 0; best = Math.max(best, run); }
+    let current = 0;
+    for (let i = levels.length - 1; i >= 0 && levels[i] > 0; i--) current++;
+    h.parentElement.querySelector(".heat-stats").innerHTML = [["active days", levels.filter((n) => n > 0).length], ["longest streak", best + "d"], ["current streak", current + "d"]]
+      .map(([k, v]) => `<span><b>${v}</b>${k}</span>`).join("");
+  }));
+}
+
+/* ── oculus tracking (same gaze math as lib/eye-tracking.ts) ───────── */
+let pointer = null, touch = false, raf = null, sightOn = true;
+function gaze(o, p) {
+  const dx = p.x - o.x, dy = p.y - o.y, d = Math.hypot(dx, dy), e = Math.hypot(dx / 26, dy / 12), s = Math.min(d / 180, 1);
+  return e === 0 ? { x: 0, y: 0 } : { x: (dx / e) * s, y: (dy / e) * s };
+}
+function track() {
+  raf = null;
+  let primary = null;
+  for (const svg of $$(".oc-svg")) {
+    const r = svg.getBoundingClientRect();
+    if (!r.width) continue;
+    const o = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    if (!primary && app.contains(svg)) primary = { ...o, rad: r.width * 0.11 };
+    const g = pointer ? gaze(o, pointer) : { x: 0, y: 0 };
+    svg.querySelector(".oc-iris").setAttribute("transform", `translate(${g.x.toFixed(2)} ${g.y.toFixed(2)})`);
+  }
+  const fmt = (a) => (pointer ? String(Math.round(pointer[a])).padStart(4, "0") : "----");
+  $$(".oc-x").forEach((n) => (n.textContent = fmt("x")));
+  $$(".oc-y").forEach((n) => (n.textContent = fmt("y")));
+  $$(".oc-status").forEach((n) => { n.textContent = pointer ? "locked" : "standby"; n.classList.toggle("on", !!pointer); });
+  const show = sightOn && pointer && !touch && primary && !app.classList.contains("pre");
+  $("#sight").hidden = !show;
+  if (show) {
+    // Start at the iris rim and stop short of the reticle so the dots read as a beam between them.
+    const dx = pointer.x - primary.x, dy = pointer.y - primary.y, d = Math.hypot(dx, dy) || 1;
+    const start = Math.min(primary.rad, d), end = Math.max(start, d - 14);
+    const a = { x: primary.x + (dx / d) * start, y: primary.y + (dy / d) * start };
+    const b = { x: primary.x + (dx / d) * end, y: primary.y + (dy / d) * end };
+    const line = $("#sight-line"), fade = $("#sight-fade"), origin = $("#sight-origin");
+    for (const el of [line, fade]) { el.setAttribute("x1", a.x); el.setAttribute("y1", a.y); el.setAttribute("x2", b.x); el.setAttribute("y2", b.y); }
+    origin.setAttribute("cx", a.x); origin.setAttribute("cy", a.y);
+    Object.assign($("#reticle").style, { left: pointer.x + "px", top: pointer.y + "px" });
+    Object.assign($("#rlabel").style, { left: `clamp(8px, ${pointer.x + 20}px, calc(100vw - 132px))`, top: `clamp(8px, ${pointer.y + 20}px, calc(100dvh - 28px))` });
+    $("#rlabel").textContent = `x ${fmt("x")} · y ${fmt("y")}`;
+  }
+}
+const schedule = () => { if (raf === null) raf = requestAnimationFrame(track); };
+addEventListener("pointermove", (e) => { if (!e.isPrimary) return; pointer = { x: e.clientX, y: e.clientY }; touch = e.pointerType === "touch"; schedule(); }, { passive: true });
+addEventListener("pointerdown", (e) => { pointer = { x: e.clientX, y: e.clientY }; touch = e.pointerType === "touch"; schedule(); }, { passive: true });
+addEventListener("pointerup", (e) => { if (e.pointerType === "touch") { pointer = null; schedule(); } }, { passive: true });
+document.documentElement.addEventListener("pointerleave", () => { pointer = null; schedule(); });
+addEventListener("blur", () => { pointer = null; schedule(); });
+addEventListener("scroll", schedule, { passive: true, capture: true });
+addEventListener("resize", schedule, { passive: true });
+
+/* ── editor state ──────────────────────────────────────────────────── */
+const ed = () => $("#app .editor");
+function renderCode(len) {
+  const e = ed(); if (!e) return;
+  const vis = SOURCE.slice(0, len);
+  const cl = vis.split("\n").length - 1;
+  let off = 0;
+  $(".ed-code", e).innerHTML = LINES.map((l, i) => {
+    const t = l.slice(0, Math.max(0, len - off)); off += l.length + 1;
+    const cur = i === cl;
+    return `<span class="ln${cur ? " cur" : ""}"><span class="ln-n">${i + 1}</span><span class="ln-t">${hl(t)}${cur ? `<span class="cursor">&nbsp;</span>` : ""}</span></span>`;
+  }).join("") + `<span class="tilde">~</span>`;
+  $(".ed-pos", e).textContent = `${cl + 1}:${vis.length - vis.lastIndexOf("\n")}`;
+}
+function setEd(s) {
+  const e = ed(); if (!e) return;
+  e.dataset.ed = s;
+  $(".ed-mode", e).textContent = ["typing", "shell", "opening"].includes(s) ? "INSERT" : "NORMAL";
+  $(".ed-tab-x", e).textContent = s === "ready" ? "×" : "+";
+}
+function setCmd(text, cursor) {
+  const n = $("#app .ed-cmdtext");
+  if (n) n.innerHTML = esc(text) + (cursor ? `<span class="cursor">&nbsp;</span>` : "");
+}
+function setLaunch(n) {
+  const input = $("#app .ed-input"); if (!input) return;
+  input.readOnly = n >= 0;
+  input.value = n >= 0 ? LAUNCH.slice(0, n) : "";
+  input.placeholder = n >= 0 ? "" : "help, projects, layout 5…";
+  $("#app .ed-enter").classList.toggle("hot", n === LAUNCH.length);
+}
+
+/* ── morph engine ──────────────────────────────────────────────────── */
+const PHASES = ["identity", "morphing", "shell", "typing", "launching", "ready"];
+const R = { token: 0, speed: 1, phase: null, held: null };
+class Cancel {}
+const check = (tok) => { if (tok !== R.token) throw new Cancel(); };
+const wait = (ms, tok) => new Promise((r) => setTimeout(r, ms / R.speed)).then(() => check(tok));
+function typeOut(delays, onStep, tok) {
+  const at = []; let t = 0;
+  for (const d of delays) at.push((t += d));
+  return new Promise((res, rej) => {
+    const start = performance.now(); let last = -1;
+    const f = () => {
+      if (tok !== R.token) return rej(new Cancel());
+      const el = (performance.now() - start) * R.speed;
+      let n = 0; while (n < at.length && at[n] <= el) n++;
+      if (n !== last) { last = n; onStep(n); }
+      n >= at.length ? res() : requestAnimationFrame(f);
+    };
+    requestAnimationFrame(f);
+  });
+}
+function fly(src, dst, ms, stretch = false) {
+  const a = src.getBoundingClientRect(), b = dst?.getBoundingClientRect();
+  const opts = { duration: ms / R.speed, easing: "cubic-bezier(.22,1,.36,1)", fill: "forwards" };
+  if (!b || !b.width) return src.animate([{ opacity: 1 }, { opacity: 0 }], opts).finished;
+  const sx = b.width / a.width, sy = stretch ? b.height / a.height : sx;
+  src.style.transformOrigin = "0 0";
+  return src.animate([{ transform: "none" }, { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${sx}, ${sy})` }], opts).finished;
+}
+const fadeOut = (el, ms = 220) => el?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms / R.speed, fill: "forwards" });
+function revealApp(ms = 650) {
+  app.classList.remove("pre");
+  app.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms / R.speed, easing: "ease-out" });
+}
+function landed() {
+  stage.innerHTML = ""; stage.className = "";
+  app.classList.remove("pre", "landing", "landing-eye");
+  schedule();
+}
+function showStage(html, cls = "") { stage.className = "on " + cls; stage.innerHTML = html; schedule(); }
+
+const MORPHS = {
+  dock: {
+    name: "title dock", desc: "Current intro: the name sits huge in the middle with your role, then flies into the editor's title bar.",
+    identity: {
+      build() {
+        showStage(`<div class="st-center"><div class="st-title"><span class="b">❯</span> <span class="st-name">Preet Codes</span></div>
+          <div class="st-copy"><p>${D.role} <span class="b">@ ${D.company}</span></p><p class="m" style="font-size:10px">${D.location}</p><p class="m mt">${D.description}</p>
+          <p class="st-hint"><span class="cursor">&nbsp;</span> opening my workspace</p></div></div>`);
+      },
+      async run(tok) { this.build(); stage.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 / R.speed }); await wait(800, tok); },
+      instant() { this.build(); },
+    },
+    morphing: {
+      async run(tok) {
+        app.classList.add("landing");
+        fadeOut($(".st-copy", stage)); fadeOut($(".st-title .b", stage));
+        revealApp();
+        await fly($(".st-name", stage), $("#app .ws-name"), 650);
+        check(tok); landed();
+      },
+      instant() { landed(); },
+    },
+  },
+  eyedock: {
+    name: "eye + title", desc: "Eye and title dock combined: the oculus opens above 'Preet Codes' and your role, blinks, then both fly at once — the eye into its tile, the name into the editor's title bar.",
+    identity: {
+      build() {
+        showStage(`<div class="st-center"><div class="st-eye st-eye-sm">${eyeSvg()}</div>
+          <div class="st-title"><span class="b">❯</span> <span class="st-name">Preet Codes</span></div>
+          <div class="st-copy"><p>${D.role} <span class="b">@ ${D.company}</span></p><p class="m" style="font-size:10px">${D.location}</p>
+          <p class="st-hint"><span class="cursor">&nbsp;</span> opening my workspace</p></div></div>`);
+      },
+      async run(tok) {
+        this.build();
+        const lid = $(".oc-lidwrap", stage);
+        stage.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260 / R.speed });
+        await lid.animate([{ transform: "scaleY(.04)" }, { transform: "scaleY(1)" }], { duration: 480 / R.speed, easing: "cubic-bezier(.22,1,.36,1)" }).finished;
+        await wait(320, tok);
+        await lid.animate([{ transform: "scaleY(1)" }, { transform: "scaleY(.06)" }, { transform: "scaleY(1)" }], { duration: 200 / R.speed }).finished;
+        await wait(450, tok);
+      },
+      instant() { this.build(); },
+    },
+    morphing: {
+      async run(tok) {
+        app.classList.add("landing", "landing-eye");
+        fadeOut($(".st-copy", stage)); fadeOut($(".st-title .b", stage));
+        revealApp(700);
+        await Promise.all([
+          fly($(".st-eye", stage), $("#app .oculus.primary .oc-svg"), 750),
+          fly($(".st-name", stage), $("#app .ws-name"), 650),
+        ]);
+        check(tok); landed();
+      },
+      instant() { landed(); },
+    },
+  },
+  eye: {
+    name: "eye opens", desc: "The oculus is the intro: a giant eye opens, blinks, tracks you, then flies into wherever this layout keeps the oculus.",
+    identity: {
+      build() { showStage(`<div class="st-center"><div class="st-eye">${eyeSvg()}</div><p class="st-eyecap">oculus / 01 — calibrating</p></div>`); },
+      async run(tok) {
+        this.build();
+        const lid = $(".oc-lidwrap", stage);
+        await lid.animate([{ transform: "scaleY(.04)" }, { transform: "scaleY(1)" }], { duration: 520 / R.speed, easing: "cubic-bezier(.22,1,.36,1)" }).finished;
+        await wait(380, tok);
+        await lid.animate([{ transform: "scaleY(1)" }, { transform: "scaleY(.06)" }, { transform: "scaleY(1)" }], { duration: 200 / R.speed }).finished;
+        $(".st-eyecap", stage).textContent = "oculus / 01 — locked";
+        await wait(420, tok);
+      },
+      instant() { this.build(); $(".st-eyecap", stage).textContent = "oculus / 01 — locked"; },
+    },
+    morphing: {
+      async run(tok) {
+        const dst = $("#app .oculus.primary .oc-svg");
+        app.classList.add("landing-eye");
+        fadeOut($(".st-eyecap", stage));
+        revealApp(700);
+        await fly($(".st-eye", stage), dst, 750);
+        check(tok); landed();
+      },
+      instant() { landed(); },
+    },
+  },
+  boot: {
+    name: "boot log", desc: "A BIOS-style boot log streams in a big window, then the window collapses down into the editor's exact frame.",
+    identity: {
+      lines: () => [
+        `<span class="b">PREET-BIOS ${version()}</span> · toronto-01`, "",
+        "mounting ~/portfolio", `loading experience.md (${D.work.length} entry)`, `loading projects.ts (${D.projects.length} entries)`,
+        `indexing toolbox.json (${D.skills.length} tools)`, "calibrating oculus/01 ........ locked", "syncing git.log from github",
+      ],
+      fmt: (l, i) => (i < 2 ? l : `[ <span class="ok">ok</span> ] ${l}`),
+      async run(tok) {
+        showStage(`<div class="st-boot"><pre class="st-log"></pre></div>`);
+        const log = $(".st-log", stage), lines = this.lines();
+        for (let i = 0; i < lines.length; i++) { log.innerHTML += this.fmt(lines[i], i) + "\n"; await wait(i < 2 ? 60 : 130, tok); }
+        log.innerHTML += `[ <span class="b">wait</span> ] spawning nvim <span class="cursor">&nbsp;</span>`;
+        await wait(350, tok);
+      },
+      instant() {
+        showStage(`<div class="st-boot"><pre class="st-log">${this.lines().map(this.fmt).join("\n")}\n[ <span class="b">wait</span> ] spawning nvim <span class="cursor">&nbsp;</span></pre></div>`);
+      },
+    },
+    morphing: {
+      async run(tok) {
+        fadeOut($(".st-log", stage), 180);
+        const box = $(".st-boot", stage);
+        await fly(box, ed(), 600, true);
+        check(tok);
+        revealApp(250);
+        await fadeOut(box, 250).finished;
+        check(tok); landed();
+      },
+      instant() { landed(); },
+    },
+  },
+  tile: {
+    name: "tile in", desc: "Crosshair scan, then every pane in the layout tiles in one after another like a window manager laying out a workspace.",
+    identity: {
+      build() { showStage(`<div class="st-tile"><span>tiling workspace 1 · ${$$("#app .pane").length} panes</span></div>`); },
+      async run(tok) { this.build(); await wait(800, tok); },
+      instant() { this.build(); },
+    },
+    morphing: {
+      async run(tok) {
+        landed();
+        const panes = $$("#app .pane").filter((p) => p.getBoundingClientRect().width && p.getBoundingClientRect().top < innerHeight);
+        const anims = panes.map((p, i) => p.animate(
+          [{ opacity: 0, clipPath: "inset(50% 50% 50% 50%)" }, { opacity: 1, clipPath: "inset(0 0 0 0)" }],
+          { duration: 420 / R.speed, delay: (i * 110) / R.speed, easing: "cubic-bezier(.22,1,.36,1)", fill: "backwards" }));
+        await Promise.all(anims.map((a) => a.finished));
+        check(tok);
+      },
+      instant() { landed(); },
+    },
+  },
+  none: {
+    name: "no intro", desc: "Skip identity + morph; go straight to the shell typing nvim now.ts.",
+    identity: { async run() {}, instant() {} },
+    morphing: { async run() { revealApp(300); landed(); }, instant() { landed(); } },
+  },
+};
+
+const CORE = {
+  shell: {
+    async run(tok) {
+      setPhase("shell"); setEd("shell"); setCmd("", true);
+      await wait(120, tok);
+      await typeOut([...OPEN].map((_, i) => 48 + ((i + 1) % 3) * 16), (n) => setCmd(OPEN.slice(0, n), true), tok);
+      await wait(240, tok); setEd("opening"); setCmd(OPEN, false);
+      await wait(320, tok);
+    },
+    instant() { setPhase("shell"); setCmd(OPEN, false); setEd("opening"); },
+  },
+  typing: {
+    async run(tok) {
+      setEd("typing");
+      await typeOut([...SOURCE].map((c, i) => (c === "\n" ? 28 : /[{},;]/.test(c) ? 10 : 2 + ((i + 1) % 3))), renderCode, tok);
+    },
+    instant() { setEd("typing"); renderCode(SOURCE.length); },
+  },
+  launching: {
+    async run(tok) {
+      setEd("launching"); setLaunch(0);
+      await wait(140, tok);
+      await typeOut([...LAUNCH].map(() => 28), setLaunch, tok);
+      await wait(180, tok);
+    },
+    instant() { setEd("launching"); setLaunch(LAUNCH.length); },
+  },
+  ready: {
+    async run() { this.instant(); },
+    instant() { setEd("ready"); setLaunch(-1); setPhase("ready"); },
+  },
+};
+
+function setPhase(p) {
+  R.phase = p;
+  app.dataset.phase = p === "ready" ? "ready" : p;
+  const idx = PHASES.indexOf(p);
+  $$(".lab-stages button").forEach((b, i) => {
+    b.classList.toggle("done", i < idx || p === "ready");
+    b.classList.toggle("now", i === idx && p !== "ready");
+    b.classList.toggle("held", R.held === i);
+  });
+  $(".lab-cont").disabled = R.held === null;
+}
+
+function reset() {
+  R.token++; R.held = null;
+  document.getAnimations().forEach((a) => { if (!(a instanceof CSSAnimation) && !(a instanceof CSSTransition)) a.cancel(); });
+  stage.innerHTML = ""; stage.className = "";
+  app.classList.add("pre"); app.classList.remove("landing", "landing-eye");
+  scrollTo({ top: 0, behavior: "instant" });
+  unzoom(true); setFocus(null);
+  layout().onReset?.();
+  setPhase("identity"); setEd("shell"); setCmd("", true); renderCode(0); setLaunch(-1);
+}
+
+async function play(from = 0, holdAt = null) {
+  reset();
+  const tok = R.token, M = MORPHS[state.morph];
+  const steps = [M.identity, M.morphing, CORE.shell, CORE.typing, CORE.launching, CORE.ready];
+  try {
+    for (let i = 0; i < steps.length; i++) {
+      if (i < from) { steps[i].instant(); continue; }
+      setPhase(PHASES[i]);
+      await steps[i].run(tok);
+      check(tok);
+      if (holdAt === i && i < 5) { R.held = i; setPhase(PHASES[i]); return; }
+    }
+  } catch (e) { if (!(e instanceof Cancel)) console.error(e); }
+}
+const skip = () => play(5);
+
+/* ── navigation + commands ─────────────────────────────────────────── */
+const layout = () => LAYOUTS.find((l) => l.id === state.layout);
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 2600);
+}
+function message(msg) { const m = $("#app .ed-msg"); if (m) m.textContent = msg; }
+function help() {
+  if (R.phase !== "ready") skip();
+  toast(":work · :projects · :education · :contact · :skills · :activity · :layout 1-6 · :morph dock|eyedock|eye|boot|tile|none");
+  message(":work · :projects · :education · :contact · :layout <n> · :morph <name>");
+}
+function go(target) {
+  if (R.phase !== "ready") skip();
+  const key = $$(`#app .key[data-go="${target}"]`);
+  key.forEach((k) => { k.classList.add("on"); setTimeout(() => k.classList.remove("on"), 450); });
+  if (layout().go) return layout().go(target);
+  const el = $(`#app [data-sec="${target}"]`);
+  if (!el) return;
+  el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+  el.focus({ preventScroll: true });
+}
+function runCommand(raw) {
+  const [cmd, arg] = raw.trim().replace(/^:/, "").toLowerCase().split(/\s+/);
+  if (["help", "?", "search"].includes(cmd)) help();
+  else if (cmd === "layout" && LAYOUTS[+arg - 1]) setLayout(LAYOUTS[+arg - 1].id);
+  else if (cmd === "morph" && MORPHS[arg]) setMorph(arg);
+  else if (["work", "projects", "education", "contact", "skills", "activity"].includes(cmd)) { go(cmd); message(`jumped to ${cmd}.`); }
+  else message("unknown command. try :help.");
+}
+
+/* ── lab state ─────────────────────────────────────────────────────── */
+const hash = new URLSearchParams(location.hash.slice(1));
+const state = {
+  layout: LAYOUTS.some((l) => l.id === hash.get("layout")) ? hash.get("layout") : store.get("layout") || "current",
+  morph: MORPHS[hash.get("morph")] ? hash.get("morph") : store.get("morph") || "dock",
+  speed: +(store.get("speed") || 1),
+  accent: store.get("accent") || "orange",
+  intro: store.get("intro") !== "0",
+  sklView: SKL_VIEWS[store.get("sklview")] ? store.get("sklview") : "chips",
+};
+if (!LAYOUTS.some((l) => l.id === state.layout)) state.layout = "current";
+if (!MORPHS[state.morph]) state.morph = "dock";
+R.speed = state.speed;
+
+function save() {
+  ["layout", "morph", "speed", "accent"].forEach((k) => store.set(k, state[k]));
+  store.set("sklview", state.sklView);
+  store.set("intro", state.intro ? "1" : "0");
+  history.replaceState(null, "", `#layout=${state.layout}&morph=${state.morph}`);
+}
+function renderLab() {
+  $(".lab-layouts").innerHTML = LAYOUTS.map((l, i) => `<button data-layout="${l.id}" class="${l.id === state.layout ? "on" : ""}"><kbd>${i + 1}</kbd>${l.name}</button>`).join("");
+  $(".lab-blurb").textContent = layout().blurb;
+  $(".lab-morphs").innerHTML = Object.entries(MORPHS).map(([k, m]) => `<button data-morph="${k}" class="${k === state.morph ? "on" : ""}">${m.name}</button>`).join("");
+  $(".lab-mdesc").textContent = MORPHS[state.morph].desc;
+  $(".lab-skl").hidden = state.layout !== "bento-v5";
+  $(".lab-sklviews").innerHTML = Object.entries(SKL_VIEWS).map(([k, v]) => `<button data-skl-view="${k}" class="${k === state.sklView ? "on" : ""}">${v.name}</button>`).join("");
+  $(".lab-sdesc").textContent = SKL_VIEWS[state.sklView].desc;
+  $(".lab-speeds").innerHTML = [0.25, 0.5, 1, 2].map((s) => `<button data-speed="${s}" class="${s === state.speed ? "on" : ""}">${s}×</button>`).join("");
+  $(".lab-accents").innerHTML = ACCENTS.map((a) => `<button data-accent="${a.name}" title="${a.name}" style="--c:${a.color}" class="${a.name === state.accent ? "on" : ""}"></button>`).join("");
+  if (!$(".lab-stages").childElementCount) $(".lab-stages").innerHTML = PHASES.map((p, i) => `<button data-stage="${i}">${i + 1} ${p}</button>`).join("");
+  $("#opt-intro").checked = state.intro;
+  document.documentElement.style.setProperty("--brand", ACCENTS.find((a) => a.name === state.accent).color);
+}
+function setLayout(id, { intro = state.intro } = {}) {
+  state.layout = id;
+  document.body.dataset.layout = id;
+  app.innerHTML = layout().html();
+  $("#app .oculus")?.classList.add("primary");
+  layout().mount?.();
+  fillHeat();
+  renderLab(); save();
+  intro ? play(0) : skip();
+}
+function setMorph(k) { state.morph = k; renderLab(); save(); play(0); }
+
+/* ── events ────────────────────────────────────────────────────────── */
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button, [data-go]");
+  if (!t) return;
+  const d = t.dataset;
+  if (d.go) return d.go === "help" ? help() : go(d.go);
+  if (d.zoom !== undefined) return zoom(paneOf(t));
+  if (d.pjStep) return pjShow(pjIndex + +d.pjStep, true);
+  if (d.pj) return pjShow(+d.pj, true);
+  if (d.act === "all-projects") {
+    const f = t.closest(".file");
+    $(".file-b", f).innerHTML = projectEntries(D.projects.length);
+    t.remove(); return;
+  }
+  if (d.sklItem !== undefined) {
+    const kind = t.closest(".skl-zoom")?.dataset.kind;
+    if (kind) { sklSel[kind] = +d.sklItem; renderSkl(kind); }
+    return;
+  }
+  if (d.sklView) { state.sklView = d.sklView; renderLab(); save(); renderAllSkl(); return; }
+  if (d.sklZoom) {
+    if (R.phase !== "ready") skip();
+    const pane = paneOf($(`#app [data-sec="${d.sklZoom}"]`));
+    if (pane && zoomed !== pane) zoom(pane);
+    return;
+  }
+  if (d.layout) return setLayout(d.layout);
+  if (d.morph) return setMorph(d.morph);
+  if (d.speed) { state.speed = R.speed = +d.speed; renderLab(); save(); return; }
+  if (d.accent) { state.accent = d.accent; renderLab(); save(); return; }
+  if (d.stage) return play(0, +d.stage);
+  if (d.cmd === "replay") return play(0);
+  if (d.cmd === "skip") return skip();
+  if (d.cmd === "continue" && R.held !== null) return play(R.held + 1);
+});
+document.addEventListener("submit", (e) => {
+  if (!e.target.matches(".ed-cmdline")) return;
+  e.preventDefault();
+  if (R.phase !== "ready") return skip();
+  const input = $(".ed-input", e.target);
+  runCommand(input.value); input.value = ""; input.blur();
+});
+$("#opt-intro").addEventListener("change", (e) => { state.intro = e.target.checked; save(); });
+$("#opt-sight").addEventListener("change", (e) => { sightOn = e.target.checked; schedule(); });
+$("#lab-toggle").addEventListener("click", toggleLab);
+function toggleLab() {
+  const closed = $("#lab").classList.toggle("closed");
+  $("#lab-toggle").textContent = closed ? "+" : "–";
+  store.set("closed", closed ? "1" : "0");
+}
+addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const field = e.target.closest?.("input, textarea, select, [contenteditable]");
+  if (e.key === "Escape") { if (field) e.target.blur(); else if (zoomed) unzoom(); else if (R.phase !== "ready") skip(); return; }
+  if (field || e.repeat) return;
+  const i = LAYOUTS.findIndex((l) => l.id === state.layout);
+  if (/^[1-6]$/.test(e.key)) return setLayout(LAYOUTS[+e.key - 1].id);
+  if (e.key === "[" || e.key === "]") return setLayout(LAYOUTS[(i + (e.key === "]" ? 1 : LAYOUTS.length - 1)) % LAYOUTS.length].id);
+  if (e.key === "`") return toggleLab();
+  if (e.key === "r") return play(0);
+  if (e.key === "?") { e.preventDefault(); return help(); }
+  if (e.key === ":") {
+    e.preventDefault(); if (R.phase !== "ready") skip();
+    return requestAnimationFrame(() => $("#app .ed-input")?.focus());
+  }
+  if ($("#app .zoom-host")) {
+    if (e.key === "z") { if (R.phase !== "ready") skip(); return zoom(zoomed || focused || paneOf($("#app .pj"))); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); return pjShow(pjIndex + (e.key === "ArrowRight" ? 1 : -1), true); }
+  }
+  const s = SHORTCUTS.find(([k]) => k === e.key.toLowerCase());
+  if (s) { e.preventDefault(); go(s[1]); }
+});
+
+if (store.get("closed") === "1" || (store.get("closed") === null && innerWidth < 700)) toggleLab();
+setLayout(state.layout, { intro: true });
+</script>
+</body>
+</html>

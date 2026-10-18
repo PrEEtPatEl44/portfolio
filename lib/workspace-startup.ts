@@ -1,5 +1,5 @@
-export const OPEN_COMMAND = "nvim now.ts";
-export const LAUNCH_COMMAND = "open portfolio";
+export const OPEN_COMMAND = "build me a portfolio";
+export const LAUNCH_COMMAND = "open it";
 
 export type StartupPhase = "identity" | "morphing" | "shell" | "opening" | "typing" | "launching" | "ready";
 export type StartupFrame = {
@@ -10,26 +10,33 @@ export type StartupFrame = {
   instant?: boolean;
 };
 
-/** A deterministic timeline: slight punctuation pauses without random hydration. */
+/** A deterministic timeline: the session pauses where tools "run", without random hydration. */
 export function createStartupTimeline(source: string) {
-  // Identity holds while the oculus opens and blinks; morphing is the eye + title flight.
+  // Identity shows the name and an empty prompt; shell types the prompt there;
+  // morphing is the "enter": name and prompt fly into the hero and the terminal.
   const frames: (StartupFrame & { at: number })[] = [
     { at: 0, phase: "identity", commandLength: 0, codeLength: 0 },
-    { at: 1500, phase: "morphing", commandLength: 0, codeLength: 0 },
-    { at: 2300, phase: "shell", commandLength: 0, codeLength: 0 },
+    { at: 700, phase: "shell", commandLength: 0, codeLength: 0 },
   ];
-  let at = 2420;
+  let at = 820;
   for (let index = 1; index <= OPEN_COMMAND.length; index++) {
     at += 48 + (index % 3) * 16;
     frames.push({ at, phase: "shell", commandLength: index, codeLength: 0 });
   }
-  at += 240;
+  at += 380;
+  frames.push({ at, phase: "morphing", commandLength: OPEN_COMMAND.length, codeLength: 0 });
+  at += 720;
   frames.push({ at, phase: "opening", commandLength: OPEN_COMMAND.length, codeLength: 0 });
-  at += 320;
+  at += 520;
   frames.push({ at, phase: "typing", commandLength: OPEN_COMMAND.length, codeLength: 0 });
   for (let index = 1; index <= source.length; index++) {
-    const character = source[index - 1];
-    at += character === "\n" ? 28 : /[{},;]/.test(character) ? 10 : 2 + (index % 3);
+    if (source[index - 1] === "\n") {
+      // Wait while a tool "runs" before its result line, and a beat between steps.
+      const next = source.slice(index).split("\n", 1)[0].trimStart();
+      at += next.startsWith("⎿") ? 220 : next.startsWith("⏺") ? 90 : 24;
+    } else {
+      at += 1 + (index % 2);
+    }
     frames.push({ at, phase: "typing", commandLength: OPEN_COMMAND.length, codeLength: index });
   }
   at += 140;
