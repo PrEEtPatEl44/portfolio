@@ -105,7 +105,7 @@ export function GitHubActivity({ fit = false }: { fit?: boolean }) {
 
   if (data === null || data.length === 0) {
     return (
-      <div className="h-32 animate-pulse rounded bg-zinc-800/50" />
+      <p className="min-h-40 py-4 font-space-mono text-xs text-muted-foreground" role="status">{data === null ? "Fetching GitHub contributions…" : "GitHub contributions unavailable."}</p>
     );
   }
 

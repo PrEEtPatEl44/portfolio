@@ -25,7 +25,7 @@ export const revalidate = 3600;
 export default function Home() {
   return (
     <div className="portfolio-home crt relative isolate min-h-screen">
-      <BGPattern variant="grid" mask="none" size={40} fill="var(--grid-fill)" />
+      <BGPattern className="portfolio-grid-background" variant="grid" mask="none" size={40} fill="var(--grid-fill)" />
       <BentoWorkspace intro={{
         name: hero.name,
         location: hero.location,
