@@ -1,0 +1,554 @@
+<title>Intro Reel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: the portfolio itself, full window. The terminal opens at centre stage, each tool call
+   deals a card out of it onto the table, and the build snaps every card into the bento grid.
+   Single dark look on purpose: it is the site's own look. */
+:root {
+  color-scheme: dark;
+  --orange: #f26a21;
+  --ink: #160800;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --s-bg: #050505;
+  --s-grid: #161514;
+  --s-tile: #080808;
+  --s-border: #232120;
+  --s-skel: #1b1a19;
+  --s-fg: #dcd8d3;
+  --s-dim: #807b75;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; background: var(--s-bg); overflow: hidden; }
+body { font-family: var(--font-mono); }
+.screen { position: fixed; inset: 0; }
+.topbar { box-shadow: -1400px 0 0 var(--orange), 1400px 0 0 var(--orange); }
+
+/* ================= stage (internal 1280x800) ================= */
+.screen { position: absolute; inset: 0; overflow: hidden; background: var(--s-bg); color: var(--s-fg); font-family: var(--font-mono); font-size: 12px; line-height: 18px; }
+.world { position: absolute; left: 0; top: 0; width: 1280px; height: 800px; transform-origin: 0 0; }
+.grid, .grid-glow { position: absolute; inset: -1400px; pointer-events: none; background-size: 34px 34px; background-position: 1400px 1400px; }
+.grid { background-image: linear-gradient(var(--s-grid) 1px, transparent 1px), linear-gradient(90deg, var(--s-grid) 1px, transparent 1px); }
+.grid-glow { opacity: 0; background-image: linear-gradient(rgba(242,106,33,.75) 1px, transparent 1px), linear-gradient(90deg, rgba(242,106,33,.75) 1px, transparent 1px); }
+.o { color: var(--orange); }
+.dm { color: var(--s-dim); }
+.w { color: #fff; font-weight: 700; }
+
+.topbar { position: absolute; left: 0; right: 0; top: 0; height: 22px; background: var(--orange); color: #1a0900; display: flex; align-items: center; gap: 14px; padding: 0 8px; font-size: 11px; white-space: nowrap; overflow: hidden; }
+.topbar .cur { background: #1a0900; color: var(--orange); padding: 0 6px; }
+.topbar .r { margin-left: auto; }
+
+.tile { position: absolute; }
+.tile > .frame { position: absolute; inset: 0; background: var(--s-tile); border: 1px solid var(--s-border); }
+.tile > .head { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px 8px; font-size: 11.5px; white-space: nowrap; }
+.tile > .body { position: relative; padding: 4px 14px 12px; }
+.tag { color: var(--orange); font-size: 10px; margin-right: 6px; }
+.head b { color: #fff; font-weight: 700; margin-right: 6px; }
+.stack { display: grid; }
+.stack > * { grid-area: 1 / 1; }
+.sk { height: 9px; background: var(--s-skel); border-radius: 1px; }
+.skel { display: grid; gap: 10px; align-content: start; }
+.real { display: grid; gap: 4px; align-content: start; }
+
+.welcome { border: 1px solid #5c2a10; border-radius: 3px; padding: 8px 10px; font-size: 11.5px; line-height: 16px; margin-bottom: 10px; }
+.tprompt { position: relative; display: flex; align-items: center; gap: 0; height: 24px; padding: 0 8px; background: #121110; font-size: 12px; margin-bottom: 8px; white-space: nowrap; }
+.tprompt .pb { position: absolute; inset: -1px; border: 1px solid var(--orange); border-radius: 2px; pointer-events: none; }
+.tprompt .chev { color: var(--orange); margin-right: 7px; position: relative; z-index: 1; }
+.tprompt .pw { position: relative; z-index: 1; display: inline-block; padding: 0 3px; transform-origin: 50% 70%; }
+.tprompt .hl { position: absolute; top: 3px; bottom: 3px; left: 0; width: 0; background: var(--orange); border-radius: 2px; z-index: 0; }
+.tprompt .caret { position: absolute; top: 5px; width: 7px; height: 14px; background: var(--orange); z-index: 1; }
+.tprompt .ent { margin-left: auto; color: #6d6a66; position: relative; z-index: 1; display: inline-block; }
+.stream { font-size: 11.5px; line-height: 16px; display: grid; }
+.ln { padding-left: 14px; position: relative; }
+.ln::before { content: ""; position: absolute; left: 1px; top: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+.ln.sub { color: var(--s-dim); padding-left: 28px; }
+.ln.sub::before { display: none; }
+.ln b { color: #fff; font-weight: 700; }
+.status-stack { margin-top: 6px; font-size: 11.5px; }
+.ready { font-size: 11px; color: var(--s-dim); }
+.tinput { position: absolute; left: 14px; right: 14px; top: 410px; height: 34px; border: 1px solid var(--s-border); border-radius: 3px; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 11.5px; }
+.tinput .e { margin-left: auto; color: var(--s-dim); }
+.tfoot { position: absolute; left: 14px; right: 14px; top: 454px; display: flex; justify-content: space-between; font-size: 10px; }
+
+.mark { position: relative; display: inline-block; font-weight: 700; font-size: 56px; line-height: 0.95; letter-spacing: -0.02em; color: #fff; margin: 4px 0 12px; transform-origin: 0 0; z-index: 3; }
+.mark span { display: block; }
+.mark span + span { color: var(--orange); }
+.mark::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.5) 2px 3px); pointer-events: none; }
+
+.eye-body { display: flex; gap: 16px; align-items: center; }
+.eye-skel { width: 260px; height: 120px; border-radius: 50%; background: var(--s-skel); margin: 14px 10px; }
+.keys { display: grid; gap: 6px; width: 120px; }
+.keys div { border: 1px solid var(--s-border); height: 24px; display: flex; align-items: center; gap: 12px; padding: 0 8px; font-size: 11px; }
+.keys .kb { background: var(--s-skel); border: 0; }
+.big01 { font-size: 40px; line-height: 44px; font-weight: 700; color: transparent; -webkit-text-stroke: 1px var(--orange); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.chips span { border: 1px solid var(--s-border); padding: 0 6px; font-size: 10.5px; color: #bdb8b2; line-height: 18px; }
+.chip-sk { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-sk i { display: block; height: 20px; background: var(--s-skel); }
+.commit { display: grid; grid-template-columns: 14px 1fr; gap: 0 8px; }
+.commit .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--orange); margin-top: 5px; }
+.commit .dot.f { background: var(--orange); }
+.headtag { border: 1px solid var(--orange); color: var(--orange); font-size: 10px; padding: 0 4px; margin: 0 6px; }
+.heat { display: grid; grid-template-columns: repeat(30, 10px); grid-template-rows: repeat(7, 10px); grid-auto-flow: column; gap: 3px; margin: 8px 0 12px; }
+.heat i { display: block; border-radius: 1px; }
+.stats { display: flex; gap: 22px; }
+.stats b { display: block; font-size: 17px; color: #fff; font-weight: 500; line-height: 22px; }
+.stats span { font-size: 10px; color: var(--s-dim); }
+.cta { display: inline-block; border: 1px solid var(--orange); color: var(--orange); padding: 8px 12px; margin-top: 12px; font-size: 11.5px; }
+.build-svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.build-svg rect { fill: none; stroke: var(--orange); stroke-width: 1.5; stroke-dasharray: 1 1; }
+
+
+
+
+
+
+.tile { transform-origin: 50% 50%; }
+.tile .skel { display: none; }
+.intro { position: absolute; transform-origin: 50% 60%; }
+.intro .intro-mark { display: block; font-size: 26px; margin: 0 0 14px; }
+.intro .intro-prompt { height: 36px; font-size: 13px; padding: 0 12px; margin: 0; background: #070707; }
+.ring { position: absolute; left: 0; top: 0; width: 2px; height: 2px; border-radius: 50%; border: 2px solid var(--orange); opacity: 0; pointer-events: none; }
+.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 75% at 50% 50%, transparent 60%, rgba(0,0,0,.5) 100%); }
+.scan { position: absolute; inset: 0; pointer-events: none; opacity: .3; background: repeating-linear-gradient(transparent 0 3px, rgba(0,0,0,.35) 3px 4px); }
+.chip {
+  position: absolute; z-index: 5; appearance: none; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; color: #cfcac4;
+  border: 1px solid var(--s-border); border-radius: 3px; background: #070707;
+  padding: 6px 12px; display: flex; gap: 10px; align-items: center;
+  transition: border-color .15s, color .15s, opacity .3s;
+}
+.chip:hover { border-color: var(--orange); color: #fff; }
+.chip:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.chip .k { color: var(--s-dim); }
+#skipBtn { right: calc(16px + env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); }
+#replayBtn { right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); opacity: 0; pointer-events: none; }
+#replayBtn.on { opacity: 1; pointer-events: auto; }
+#iris { transition: transform .18s cubic-bezier(.22,1,.36,1); }
+.eye-state.locked { color: var(--orange); }
+</style>
+
+<div class="screen" id="screen">
+  <div class="world" id="world">
+          <div class="grid" id="grid"></div>
+          <div class="grid-glow" id="gridGlow"></div>
+          <div class="intro" id="intro" style="left:475px;top:322px;width:330px">
+            <div class="mark intro-mark" id="introMark"><span>PREET</span><span>PATEL</span></div>
+            <div class="tprompt intro-prompt" id="prompt">
+                <span class="pb" id="promptBorder"></span>
+                <span class="hl" id="promptHl"></span>
+                <span class="chev">&gt;</span>
+                <span class="pw">build</span><span class="pw">me</span><span class="pw">a</span><span class="pw">portfolio</span>
+                <span class="caret" id="caret"></span>
+                <span class="ent" id="ent">↵</span>
+              </div>
+          </div>
+
+          <div class="topbar" id="topbar">
+            <span>[portfolio]</span><span class="cur">0:main*</span><span>z zoom · ←/→ projects · w/p/e/c focus · : command</span><span>6 buffers loaded</span><span class="r">"preet@toronto" 20:04</span>
+          </div>
+
+          <div class="tile" data-k="term" style="left:16px;top:34px;width:420px;height:506px">
+            <div class="frame"></div>
+            <div class="head"><span><span class="o">❯ </span><b>Preet Patel</b><span class="dm">/ portfolio</span></span><span>2026.10.22 <span class="o">UTC</span></span></div>
+            <div class="body">
+              <div class="welcome">
+                <div><span class="o">✻</span> Welcome to Claude Code</div>
+                <div class="dm" style="margin-top:4px">Tips for getting started</div>
+                <div>1. Press <span class="o">W P E C</span> to jump between tiles</div>
+                <div>2. Press a key twice, or <span class="o">z</span>, to open full screen</div>
+                <div>3. Type <span class="o">help</span> below for every command</div>
+              </div>
+              <div class="tprompt"><span class="chev">&gt;</span>build me a portfolio</div>
+              <div class="stream" id="stream">
+<div class="ln">I'll build your portfolio from your profile.</div>
+<div class="ln"><b>Read</b><span class="dm">(profile.md)</span></div>
+<div class="ln sub">⎿ Preet Patel · AI Operations Developer @ Docebo</div>
+<div class="ln"><b>Write</b><span class="dm">(components/Hero.tsx)</span></div>
+<div class="ln"><b>Write</b><span class="dm">(components/Work.tsx)</span></div>
+<div class="ln"><b>Write</b><span class="dm">(components/Education.tsx)</span></div>
+<div class="ln"><b>Write</b><span class="dm">(components/Contact.tsx)</span></div>
+<div class="ln"><b>Write</b><span class="dm">(components/Projects.tsx)</span></div>
+<div class="ln"><b>Write</b><span class="dm">(components/Oculus.tsx)</span></div>
+<div class="ln"><b>Write</b><span class="dm">(components/Skills.tsx)</span></div>
+<div class="ln"><b>Write</b><span class="dm">(components/Activity.tsx)</span></div>
+<div class="ln"><b>Bash</b><span class="dm">(npm run build)</span></div>
+<div class="ln sub">⎿ ✓ Compiled successfully</div>
+<div class="ln">Done. Your portfolio is ready.</div>
+</div>
+<div class="status-stack stack">
+                <div id="building"><span class="o">✻ Building…</span> <span class="dm">(esc to interrupt)</span></div>
+                <div class="ready" id="ready">ready when you are. type :help to explore.</div>
+              </div>
+              <div class="tinput"><span class="o">&gt;</span><span class="dm">help, projects, search…</span><span class="e">↵</span></div>
+              <div class="tfoot"><span class="o">⏵⏵ accept edits on</span><span class="dm">⎇ main · ~/portfolio</span></div>
+            </div>
+          </div>
+
+          <div class="tile" data-k="hero" style="left:448px;top:34px;width:420px;height:256px">
+            <div class="frame"></div>
+            <div class="body" style="padding-top:18px">
+              <div class="dm">// hello, world</div>
+              <div><div class="mark carry" id="heroMark"><span>PREET</span><span>PATEL</span></div></div>
+              <div class="stack">
+                <div class="skel"><div class="sk" style="width:62%"></div><div class="sk" style="width:38%"></div><div class="sk" style="width:88%"></div></div>
+                <div class="real">
+                  <div>AI Operations Developer <span class="o">@ Docebo</span></div>
+                  <div>Toronto, Ontario</div>
+                  <div class="dm" style="font-size:11.5px;line-height:16px">I build production AI agents and full-stack applications with Python, TypeScript, and React.</div>
+                  <div style="margin-top:4px"><span class="o">github ↗</span>&nbsp;&nbsp;<span class="o">linkedin ↗</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tile" data-k="eye" style="left:448px;top:302px;width:420px;height:238px">
+            <div class="frame"></div>
+            <div class="head"><span class="dm">OCULUS / 01</span><span class="dm eye-state" id="eyeState">STANDBY</span></div>
+            <div class="body">
+              <div class="stack">
+                <div class="skel eye-body"><div class="eye-skel"></div><div class="keys"><div class="kb"></div><div class="kb"></div><div class="kb"></div><div class="kb"></div><div class="kb"></div></div></div>
+                <div class="real eye-body">
+                  <svg width="270" height="160" viewBox="0 0 280 166" aria-hidden="true">
+                    <line x1="0" y1="83" x2="280" y2="83" stroke="#2a2826" stroke-dasharray="3 4"/>
+                    <line x1="140" y1="0" x2="140" y2="166" stroke="#2a2826" stroke-dasharray="3 4"/>
+                    <path d="M54 46 Q140 -4 226 46" fill="none" stroke="#3a3734"/>
+                    <path d="M22 83 Q140 -8 258 83 Q140 174 22 83Z" fill="none" stroke="#8c8884" stroke-width="1.6"/>
+                    <line x1="12" y1="83" x2="28" y2="83" stroke="#f26a21" stroke-width="2"/>
+                    <line x1="252" y1="83" x2="268" y2="83" stroke="#f26a21" stroke-width="2"/>
+                    <g id="iris"><circle cx="140" cy="83" r="40" fill="none" stroke="#f26a21" stroke-opacity=".35"/>
+                    <circle cx="140" cy="83" r="30" fill="none" stroke="#f26a21" stroke-width="2"/>
+                    <line x1="140" y1="45" x2="140" y2="58" stroke="#f26a21" stroke-width="2"/>
+                    <line x1="140" y1="108" x2="140" y2="121" stroke="#f26a21" stroke-width="2"/>
+                    <line x1="102" y1="83" x2="115" y2="83" stroke="#f26a21" stroke-width="2"/>
+                    <line x1="165" y1="83" x2="178" y2="83" stroke="#f26a21" stroke-width="2"/>
+                    <circle cx="140" cy="83" r="7" fill="#f26a21"/>
+                    <circle cx="147" cy="76" r="2.6" fill="#ebe7e2"/></g>
+                  </svg>
+                  <div class="keys"><div><b class="w">W</b>work</div><div><b class="w">P</b>projects</div><div><b class="w">E</b>education</div><div><b class="w">C</b>contact</div><div><b class="w">?</b>help</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tile" data-k="proj" style="left:880px;top:34px;width:384px;height:256px">
+            <div class="frame"></div>
+            <div class="head"><span><span class="tag">TS</span><b>Projects</b><span class="dm">projects.ts</span></span><span class="dm">01 / 04</span></div>
+            <div class="body">
+              <div class="stack">
+                <div class="skel" style="padding-top:12px"><div class="sk" style="width:28%;height:28px"></div><div class="sk" style="width:55%"></div><div class="sk" style="width:90%"></div><div class="sk" style="width:70%"></div></div>
+                <div class="real">
+                  <div class="big01">01</div>
+                  <div class="w" style="font-size:13px">Reels DeepAgents</div>
+                  <div class="dm" style="font-size:11.5px;line-height:16px">Multi-agent pipeline that scripts, scores, and stitches short-form reels.</div>
+                  <div class="chips"><span>Python</span><span>DeepAgents</span><span>LangGraph</span><span>LLMs</span></div>
+                  <div class="o" style="margin-top:6px;font-size:11.5px">open repo ↗</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tile" data-k="work" style="left:880px;top:302px;width:384px;height:238px">
+            <div class="frame"></div>
+            <div class="head"><span><span class="tag">MD</span><b>Work</b><span class="dm">git log --oneline</span></span><span class="dm">⤢ z</span></div>
+            <div class="body">
+              <div class="stack">
+                <div class="skel" style="padding-top:8px"><div class="sk" style="width:84%"></div><div class="sk" style="width:46%"></div><div class="sk" style="width:94%"></div><div class="sk" style="width:76%"></div><div class="sk" style="width:58%;margin-top:18px"></div></div>
+                <div class="real" style="gap:12px">
+                  <div class="commit"><span class="dot f"></span><div><span class="o">c93834e</span><span class="headtag">HEAD → main</span><b class="w">AI Operations Developer</b> <span class="dm">@ Docebo</span><div class="dm" style="font-size:11px">May 2026 – Present</div><div style="font-size:11.5px;line-height:16px;margin-top:4px">Developing and maintaining production AI agents, including evaluations, monitoring, and supporting infrastructure.</div></div></div>
+                  <div class="commit"><span class="dot"></span><div><span class="o">a6f9f41</span> <b class="w">Software Developer Intern</b> <span class="dm">@ FGF Brands</span></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tile" data-k="skills" style="left:16px;top:552px;width:420px;height:232px">
+            <div class="frame"></div>
+            <div class="head"><span><span class="tag">JS</span><b>Skills</b><span class="dm">toolbox.json</span></span></div>
+            <div class="body"><div class="stack"><div class="skel chip-sk" id="chipSk"></div><div class="real"><div class="chips" id="chips" style="margin:0"></div></div></div></div>
+          </div>
+
+          <div class="tile" data-k="act" style="left:448px;top:552px;width:420px;height:232px">
+            <div class="frame"></div>
+            <div class="head"><span><span class="tag">GIT</span><b>Activity</b><span class="dm">git.log</span></span></div>
+            <div class="body">
+              <div class="stack">
+                <div class="skel" style="gap:0"><div class="heat" id="heatSk"></div><div class="stats"><div class="sk" style="width:50px;height:16px"></div><div class="sk" style="width:50px;height:16px"></div><div class="sk" style="width:50px;height:16px"></div><div class="sk" style="width:50px;height:16px"></div></div></div>
+                <div class="real" style="gap:0"><div class="heat" id="heat"></div><div class="stats"><div><b>776</b><span>contributions</span></div><div><b>102</b><span>active days</span></div><div><b>6d</b><span>longest streak</span></div><div><b>0d</b><span>current streak</span></div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tile" data-k="edu" style="left:880px;top:552px;width:186px;height:232px">
+            <div class="frame"></div>
+            <div class="head"><span><span class="tag">MD</span><b>Education</b></span></div>
+            <div class="body"><div class="stack">
+              <div class="skel" style="padding-top:8px"><div class="sk" style="width:90%"></div><div class="sk" style="width:70%"></div><div class="sk" style="width:55%"></div></div>
+              <div class="real"><div class="w" style="font-size:12.5px;line-height:17px">Computer Programming and Analysis</div><div class="o" style="font-size:11px">Seneca Polytechnic ↗</div><div class="dm" style="font-size:10.5px">May 2023 – Dec 2025</div></div>
+            </div></div>
+          </div>
+
+          <div class="tile" data-k="contact" style="left:1078px;top:552px;width:186px;height:232px">
+            <div class="frame"></div>
+            <div class="head"><span><span class="tag">MD</span><b>Contact</b></span></div>
+            <div class="body"><div class="stack">
+              <div class="skel" style="padding-top:8px"><div class="sk" style="width:80%"></div><div class="sk" style="width:60%;height:30px;margin-top:10px"></div></div>
+              <div class="real"><div class="w" style="font-size:13px">Let's work together.</div><div><span class="cta">get in touch ↗</span></div></div>
+            </div></div>
+          </div>
+        </div>
+  <div class="ring" id="ring"></div>
+  <div class="scan"></div>
+  <div class="vignette"></div>
+  <button class="chip" id="skipBtn" type="button">skip intro <span class="k">esc</span></button>
+  <button class="chip" id="replayBtn" type="button">↻ replay intro <span class="k">r</span></button>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const T_END = 6.0;
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const prog = (t, a, b) => clamp((t - a) / (b - a));
+  const eIn = x => x * x * x;
+  const eOut = x => 1 - Math.pow(1 - x, 3);
+  const eExpo = x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x);
+  const back = c1 => x => { const c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+  const eBack = back(1.9), eSnap = back(1.15), eFlip = back(.9);
+
+  /* content */
+  const skills = ['React','TypeScript','Next.js','Node.js','Express','Python','C# / .NET','PostgreSQL','SQL Server','Azure','AWS','Docker','Git','TensorFlow','OpenCV','Jest','Tailwind CSS','Figma','Cursor','Claude Code','RAG','LangChain','LangGraph','DeepAgents'];
+  $('#chips').innerHTML = skills.map(s => `<span>${s}</span>`).join('');
+  const heatColors = ['#1a1918', '#4a2410', '#8a3d14', '#c4531a', '#f26a21'];
+  let heat = '';
+  for (let i = 0; i < 210; i++) {
+    const v = ((i * 9301 + 49297) % 233280) / 233280;
+    const lvl = v < .45 ? 0 : v < .7 ? 1 : v < .85 ? 2 : v < .95 ? 3 : 4;
+    heat += `<i style="background:${heatColors[lvl]}"></i>`;
+  }
+  $('#heat').innerHTML = heat;
+
+  /* elements */
+  const world = $('#world');
+  const grid = $('#grid'), gridGlow = $('#gridGlow'), topbar = $('#topbar');
+  const intro = $('#intro'), introMark = $('#introMark');
+  const prompt = $('#prompt'), promptBorder = $('#promptBorder'), promptHl = $('#promptHl');
+  const pWords = $$('.pw', prompt), caret = $('#caret'), ent = $('#ent');
+  const ring = $('#ring'), skipBtn = $('#skipBtn'), replayBtn = $('#replayBtn');
+  const lines = $$('.ln', $('#stream')), building = $('#building'), ready = $('#ready');
+  const tiles = $$('.tile', world), tileBy = Object.fromEntries(tiles.map(x => [x.dataset.k, x]));
+  const term = tileBy.term, termFrame = $('.frame', term);
+
+  let VW = innerWidth, VH = innerHeight, fit = 1;
+  const resize = () => { VW = innerWidth; VH = innerHeight; fit = Math.min(VW / 1320, VH / 830); render(t); };
+  addEventListener('resize', resize);
+  const pos = el => { let x = 0, y = 0, n = el; while (n && n !== world) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } return { x, y, w: el.offsetWidth, h: el.offsetHeight }; };
+  const slot = el => { const x = parseFloat(el.style.left), y = parseFloat(el.style.top), w = parseFloat(el.style.width), h = parseFloat(el.style.height); return { x, y, w, h, cx: x + w / 2, cy: y + h / 2 }; };
+
+  /* ---------- timeline ---------- */
+  const WORD_T = [0.35, 0.57, 0.71, 0.87];
+  const ENTER = 1.2;
+  const FLIP_A = [1.24, 1.46];   // prompt turns away
+  const FLIP_B = [1.46, 1.92];   // terminal turns in
+  /* stream lines: intro, Read, ⎿, 8× Write (one per card), Bash, ⎿ compiled, Done */
+  const LINE_T = [1.9, 2.05, 2.15, 2.32, 2.54, 2.76, 2.98, 3.2, 3.42, 3.64, 3.86, 4.12, 4.42, 4.66];
+  const ARRANGE = 4.55;
+  /* card, side, row, the stream line it is written on */
+  const DEAL = [
+    ['hero', -1, 0, 3], ['work', 1, 0, 4], ['edu', -1, 1, 5], ['contact', 1, 1, 6],
+    ['proj', -1, 2, 7], ['eye', 1, 2, 8], ['skills', -1, 3, 9], ['act', 1, 3, 10],
+  ];
+  const TILT = [-4, 3.5, 5, -3, -2.5, 4, 3, -5];
+  const JIT = [-14, 10, 16, -8, 6, -16, -6, 12];
+  const ROW_Y = [168, 316, 470, 626];
+
+  const T_SLOT = slot(term);
+  const OFF = { x: 640 - T_SLOT.cx, y: 400 - T_SLOT.cy };   // terminal parked at centre stage
+
+  const cards = DEAL.map(([k, side, row, line], i) => {
+    const el = tileBy[k], S = slot(el);
+    return { el, k, side, row, line, i, S, ss: S.w < 300 ? .6 : .42, frame: $('.frame', el),
+      td: LINE_T[line] + .04, stage: { x: (side < 0 ? 222 : 1058) + JIT[i], y: ROW_Y[row] },
+      rs: TILT[i], ta: ARRANGE + .08 + i * .045 };
+  });
+
+  let M = null;
+  function measure() {
+    const E = pos(ent);
+    const wordBoxes = pWords.map(w => ({ x: w.offsetLeft, w: w.offsetWidth }));
+    M = {
+      wordBoxes, firstX: wordBoxes[0].x,
+      enter: { x: E.x + E.w / 2, y: E.y + E.h / 2 },
+      lineY: lines.map(l => { const p = pos(l); return p.y + p.h / 2 + OFF.y; }),
+      lineX: lines.map(l => { const p = pos(l); return p.x + OFF.x; }),
+    };
+  }
+  const CAM = { x: 640, y: 400, z: 1 };
+  const toScreen = p => ({ x: (p.x - CAM.x) * fit + VW / 2, y: (p.y - CAM.y) * fit + VH / 2 });
+  const op = (el, v) => { el.style.opacity = v; };
+
+  let t = 0, rate = 1;
+  function render(t) {
+    if (!M) return;
+    world.style.transform = `translate(${VW / 2}px,${VH / 2}px) scale(${fit}) translate(${-CAM.x}px,${-CAM.y}px)`;
+    op(grid, eOut(prog(t, 0, .45)));
+
+    /* --- intro card: wordmark + prompt at page centre --- */
+    const inA = eOut(prog(t, .05, .4));
+    const fa = prog(t, FLIP_A[0], FLIP_A[1]);
+    intro.style.visibility = fa >= 1 ? 'hidden' : 'visible';
+    intro.style.transform = `translateY(${(1 - inA) * 10}px) perspective(1200px) rotateY(${90 * eIn(fa)}deg) scale(${1 + .25 * eIn(fa)})`;
+    op(intro, inA);
+
+    const fl = prog(t, ENTER, ENTER + .3);
+    promptBorder.style.boxShadow = fl > 0 && fl < 1 ? `0 0 0 ${3 * (1 - fl)}px rgba(242,106,33,${.35 * (1 - fl)}), 0 0 ${28 * (1 - fl)}px rgba(242,106,33,${.5 * (1 - fl)})` : 'none';
+    let active = -1;
+    WORD_T.forEach((wt, i) => { if (t >= wt) active = i; });
+    pWords.forEach((w, i) => {
+      const s = prog(t, WORD_T[i], WORD_T[i] + .22);
+      w.style.opacity = clamp(s * 3);
+      w.style.transform = `translateY(${(1 - eOut(s)) * 5}px) scale(${.55 + .45 * eBack(s)})`;
+      w.style.color = i === active ? '#160800' : '#ebe7e2';
+    });
+    if (active >= 0) {
+      const bx = M.wordBoxes, to = bx[active], from = active === 0 ? { x: to.x + to.w / 2, w: 0 } : bx[active - 1];
+      const m = eExpo(prog(t, WORD_T[active], WORD_T[active] + .16));
+      promptHl.style.left = lerp(from.x, to.x, m) + 'px';
+      promptHl.style.width = lerp(from.w, to.w, m) + 'px';
+      op(promptHl, 1);
+    } else op(promptHl, 0);
+    if (t < ENTER) {
+      const bx = M.wordBoxes;
+      caret.style.left = (active < 0 ? M.firstX + 2 : bx[active].x + bx[active].w + 2) + 'px';
+      op(caret, (active >= 0 || (t * 2.4) % 1 < .55) ? prog(t, .05, .2) : 0);
+    } else op(caret, 0);
+    const ep = prog(t, ENTER, ENTER + .22);
+    ent.style.transform = `scale(${ep > 0 && ep < 1 ? 1 + Math.sin(ep * Math.PI) * .45 : 1})`;
+    ent.style.color = t >= ENTER ? '#f26a21' : '#6d6a66';
+
+    /* --- terminal turns in, deals, then parks left --- */
+    const fb = prog(t, FLIP_B[0], FLIP_B[1]);
+    term.style.visibility = fb > 0 ? 'visible' : 'hidden';
+    const ta = eSnap(prog(t, ARRANGE, ARRANGE + .72));
+    let kx = 0, ks = 0;
+    cards.forEach(cd => {
+      const k = prog(t, cd.td, cd.td + .2);
+      const pulse = k > 0 && k < 1 ? Math.sin(k * Math.PI) : 0;
+      kx += -cd.side * 5 * pulse; ks += .014 * pulse;
+    });
+    const ry = -90 * (1 - eFlip(fb));
+    term.style.transform = `translate(${OFF.x * (1 - ta) + kx}px,${OFF.y * (1 - ta)}px) perspective(1400px) rotateY(${ry}deg) scale(${(1 + ks) * lerp(.8, 1, eOut(fb))})`;
+    const lift = 1 - ta;
+    termFrame.style.boxShadow = lift > .01 ? `0 ${24 * lift}px ${60 * lift}px rgba(0,0,0,${.7 * lift}), 0 0 0 1px rgba(242,106,33,${.5 * lift})` : 'none';
+
+    lines.forEach((l, i) => {
+      const s = prog(t, LINE_T[i], LINE_T[i] + .14);
+      l.style.opacity = s;
+      l.style.transform = `translateX(${(1 - eOut(s)) * -6}px)`;
+    });
+    const bp = prog(t, 1.9, 2.0) * (1 - prog(t, 4.6, 4.7));
+    building.style.opacity = bp * (.55 + .45 * (0.5 + 0.5 * Math.cos(t * 6)));
+    op(ready, prog(t, 5.2, 5.4));
+
+    /* --- cards: flick out of their stream line, rest on the table, snap into the grid --- */
+    cards.forEach(cd => {
+      const { el, S, side, ss, rs, td } = cd;
+      if (t < td) { el.style.visibility = 'hidden'; return; }
+      el.style.visibility = 'visible';
+      const f = prog(t, td, td + .55), fe = eExpo(f);
+      const start = { x: M.lineX[cd.line] + 200, y: M.lineY[cd.line] };
+      let x = lerp(start.x, cd.stage.x, fe);
+      let y = lerp(start.y, cd.stage.y, fe) - Math.sin(Math.PI * clamp(f * 1.15)) * 46;
+      let s = lerp(.06, ss, eBack(f));
+      let r = lerp(-side * 28, rs, eOut(f));
+      const a = prog(t, cd.ta, cd.ta + .72), ae = eSnap(a);
+      if (a > 0) { x = lerp(cd.stage.x, S.cx, ae); y = lerp(cd.stage.y, S.cy, ae); s = lerp(ss, 1, ae); r = lerp(rs, 0, eOut(a)); }
+      el.style.transform = a >= 1 ? 'none' : `translate(${x - S.cx}px,${y - S.cy}px) rotate(${r}deg) scale(${s})`;
+      el.style.opacity = clamp(f * 8);
+      const glow = 1 - prog(t, td + .25, td + .9), lf = 1 - eOut(a);
+      cd.frame.style.boxShadow = lf > .01 || glow > .01
+        ? `0 ${22 * lf}px ${50 * lf}px rgba(0,0,0,${.7 * lf}), 0 0 0 ${1 + glow}px rgba(242,106,33,${.85 * glow}), 0 0 ${30 * glow}px rgba(242,106,33,${.35 * glow})`
+        : 'none';
+      /* the line that wrote this card lights up as it flies */
+      const ln = lines[cd.line], lg = prog(t, td, td + .05) * (1 - prog(t, td + .3, td + .8));
+      ln.style.color = lg > .01 ? `rgba(242,106,33,${.4 + .6 * lg})` : '';
+    });
+
+    /* --- waves: Return, and the build compiling --- */
+    let waveOn = false;
+    for (const w of [{ t: ENTER, c: M.enter, ring: true, dur: .75 }, { t: LINE_T[12], c: { x: 640, y: 400 }, ring: false, dur: .9 }]) {
+      const wp = prog(t, w.t, w.t + w.dur);
+      if (wp <= 0 || wp >= 1) continue;
+      waveOn = true;
+      const rr = Math.max(VW, VH) * 1.2 * eOut(wp);
+      if (w.ring) {
+        const sc = toScreen(w.c);
+        ring.style.transform = `translate(${sc.x - rr}px,${sc.y - rr}px)`;
+        ring.style.width = ring.style.height = 2 * rr + 'px';
+        ring.style.borderWidth = (3 * (1 - wp) + .5) + 'px';
+        op(ring, .75 * (1 - wp));
+      } else op(ring, 0);
+      const rw = rr / fit, band = 160 / fit;
+      const mask = `radial-gradient(circle at ${w.c.x + 1400}px ${w.c.y + 1400}px, transparent ${Math.max(0, rw - band)}px, #000 ${Math.max(0, rw - band * .35)}px, #000 ${rw}px, transparent ${rw + 2}px)`;
+      gridGlow.style.webkitMaskImage = mask; gridGlow.style.maskImage = mask;
+      op(gridGlow, .9 * (1 - prog(t, w.t + w.dur * .4, w.t + w.dur)));
+    }
+    if (!waveOn) { op(ring, 0); op(gridGlow, 0); }
+
+    const tb = eOut(prog(t, 5.1, 5.5));
+    op(topbar, tb);
+    topbar.style.transform = `translateY(${(1 - tb) * -100}%)`;
+    op(skipBtn, prog(t, .1, .4) * (1 - prog(t, ARRANGE, ARRANGE + .3)));
+    skipBtn.style.pointerEvents = t < ARRANGE ? 'auto' : 'none';
+  }
+
+  /* ---------- playback: plays once, then the dashboard is live ---------- */
+  let raf = 0, last = 0, landed = false;
+  function tick(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    t = Math.min(T_END, t + dt * rate);
+    render(t);
+    if (t < T_END) raf = requestAnimationFrame(tick); else land();
+  }
+  function start() {
+    cancelAnimationFrame(raf);
+    landed = false; replayBtn.classList.remove('on');
+    t = 0; rate = 1; render(0);
+    last = performance.now();
+    raf = requestAnimationFrame(tick);
+  }
+  function skip() { if (!landed) rate = 4; }
+  function land() { landed = true; replayBtn.classList.add('on'); }
+  skipBtn.addEventListener('click', skip);
+  replayBtn.addEventListener('click', start);
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Escape') skip();
+    if ((e.key === 'r' || e.key === 'R') && landed) start();
+  });
+
+  /* the eye tracks the cursor once the dashboard is live */
+  const iris = $('#iris'), eyeSvg = iris.ownerSVGElement, eyeTile = tileBy.eye, eyeState = $('#eyeState');
+  addEventListener('pointermove', e => {
+    if (!landed) return;
+    const r = eyeSvg.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    const d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 260);
+    iris.style.transform = `translate(${dx / d * k * 26}px, ${dy / d * k * 12}px)`;
+    const tr = eyeTile.getBoundingClientRect();
+    const inside = e.clientX >= tr.left && e.clientX <= tr.right && e.clientY >= tr.top && e.clientY <= tr.bottom;
+    eyeState.textContent = inside ? 'LOCKED' : 'STANDBY';
+    eyeState.classList.toggle('locked', inside);
+  });
+
+  (document.fonts?.ready ?? Promise.resolve()).then(() => {
+    measure(); resize();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { t = T_END; render(t); land(); }
+    else setTimeout(start, 250);
+  });
+})();
+</script>

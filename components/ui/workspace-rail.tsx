@@ -11,8 +11,9 @@ export const WORKSPACE_SHORTCUTS = [
   { key: "c", label: "contact", target: "contact" },
 ];
 
-export function WorkspaceRail({ archive = false, onNavigate, onOpenCommands }: {
+export function WorkspaceRail({ archive = false, enabled = true, onNavigate, onOpenCommands }: {
   archive?: boolean;
+  enabled?: boolean;
   onNavigate?: (target: string) => void;
   onOpenCommands?: () => void;
 }) {
@@ -38,6 +39,7 @@ export function WorkspaceRail({ archive = false, onNavigate, onOpenCommands }: {
   }, [archive, onNavigate, router]);
 
   useEffect(() => {
+    if (!enabled) return;
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (event.metaKey || event.ctrlKey || event.altKey || event.repeat ||
@@ -49,13 +51,13 @@ export function WorkspaceRail({ archive = false, onNavigate, onOpenCommands }: {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, showCommands]);
+  }, [enabled, go, showCommands]);
 
   useEffect(() => () => { if (flashRef.current) clearTimeout(flashRef.current); }, []);
 
   return (
     <aside className="workspace-side-rail" aria-label="Oculus and navigation">
-      <TrackingEye />
+      <TrackingEye enabled={enabled} />
       <p className="workspace-rail-label">navigate / keys</p>
       <nav aria-label="Section shortcuts" className="workspace-rail-keys">
         {WORKSPACE_SHORTCUTS.map((shortcut) => (

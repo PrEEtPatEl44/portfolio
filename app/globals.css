@@ -1035,7 +1035,7 @@
 
 /* ── Bento workspace (home) ──────────────────────────────────────────
    One screen, no page scroll: tmux bar on top, a 6×3 grid of tiles.
-   Tiles show skeletons until now.ts finishes, then resolve in turn. */
+   Real content deals from the terminal into the measured grid slots. */
 @layer utilities {
   .bento {
     position: relative;
@@ -1176,8 +1176,7 @@
   /* ── centre tile: a Claude Code session that builds the portfolio ── */
   .cc { display: flex; flex-direction: column; font-size: 12px; }
 
-  /* The log always fills the session; the welcome box absorbs spare height.
-     Once output overflows, the component scrolls to the newest line. */
+  /* Keep the welcome content compact; spare height belongs below the transcript. */
   .cc-scroll {
     flex: 1;
     min-height: 0;
@@ -1190,7 +1189,7 @@
 
   .cc-welcome {
     display: flex;
-    flex: 1 0 auto;
+    flex: 0 0 auto;
     flex-direction: column;
     gap: 2px;
     margin-bottom: 10px;
@@ -1200,7 +1199,7 @@
   }
 
   .cc-welcome > .cc-dim { padding-left: 18px; font-size: 10px; }
-  .cc-tips { margin-top: auto; padding-top: 12px; color: var(--muted-foreground); font-size: 11px; }
+  .cc-tips { margin-top: 0; padding-top: 12px; color: var(--muted-foreground); font-size: 11px; }
   .cc-tips > p { margin-bottom: 4px; color: var(--foreground); }
   .cc-tips ol { display: grid; gap: 2px; padding-left: 18px; list-style: decimal; }
   .cc-tips kbd { color: var(--brand); font: inherit; }
@@ -1414,93 +1413,10 @@
   [data-zoomed] .worklog-role { font-size: 15px; }
   [data-zoomed] .worklog-head::before { background: var(--brand); }
 
-  /* ── skeletons: the real content, redacted, until now.ts finishes ──
-     Each text run sits on a bar painted in --redact while its text is hidden,
-     so the skeleton has the exact shape of what loads. On ready the bars fade
-     out while the text fades in: one crossfade per tile, never an empty frame. */
-  .bento-tile { --redact: transparent; --resolve-delay: 0ms; }
-  .bento-tile[data-loading] { --redact: oklch(0.25 0 0); }
-  .bento-tile:nth-child(5) { --resolve-delay: 90ms; }
-  .bento-tile:nth-child(6) { --resolve-delay: 180ms; }
-  .bento-tile:nth-child(7) { --resolve-delay: 270ms; }
-  .bento-tile:nth-child(8) { --resolve-delay: 360ms; }
-  .bento-tile:nth-child(9) { --resolve-delay: 450ms; }
-
-  /* Inline runs and pills: one solid bar. */
-  .bento-tile-body :where(a, .workspace-tag, .workspace-entry-number, .workspace-period, .deck-featured, .deck-item > span:not(.deck-progress), .worklog-hash, .worklog-ref, .worklog-role, .worklog-company, .worklog-period) {
-    background-image: linear-gradient(var(--redact), var(--redact));
-  }
-
-  /* Block text: one bar per line box. */
-  .bento-tile-body :where(p, h3, dd, dt, .deck-number) {
-    background-image: repeating-linear-gradient(transparent 0 0.22lh, var(--redact) 0.22lh 0.78lh, transparent 0.78lh 1lh);
-  }
-
-  .bento-tile[data-loading] .bento-tile-body,
-  .bento-tile[data-loading] .bento-tile-body * { color: transparent; -webkit-text-stroke-color: transparent; }
-  .bento-tile[data-loading] .bento-tile-body :is(a, .workspace-tag, .worklog-ref) { border-color: transparent; }
-  .bento-tile[data-loading] .deck-item[aria-current] { background-color: transparent; }
-  .bento-tile[data-loading] .worklog-head::before { border-color: var(--redact); background: var(--redact); box-shadow: none; }
-  .bento-tile[data-loading] .react-activity-calendar svg { filter: grayscale(1) brightness(0.5); }
-
   .bento-tile-body { position: relative; }
-
-  /* Size these to their text so their bars do too. */
   .deck-title,
   .bento .workspace-entry-number { align-self: flex-start; }
-
-  .bento-tile[data-loading] .bento-tile-body::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(100deg, transparent 30%, color-mix(in oklch, var(--foreground) 6%, transparent) 50%, transparent 70%) 0 0 / 250% 100%;
-    animation: bento-shimmer 1.5s linear infinite;
-  }
-
-  .bento[data-resolving] .bento-tile { transition: --redact 480ms ease var(--resolve-delay), border-color 200ms; }
-
-  .bento[data-resolving] :is(.bento-tile-body, .bento-tile-body *, .bento-tile-body *::before) {
-    transition:
-      color 480ms ease var(--resolve-delay),
-      border-color 480ms ease var(--resolve-delay),
-      background-color 480ms ease var(--resolve-delay),
-      box-shadow 480ms ease var(--resolve-delay),
-      filter 480ms ease var(--resolve-delay),
-      -webkit-text-stroke-color 480ms ease var(--resolve-delay);
-  }
-
-  /* Hero and oculus load the same way. The name stays visible: it flew in from the intro. */
-  :is(.bento-hero, .bento-oculus) { --redact: transparent; position: relative; }
-  :is(.bento-hero, .bento-oculus)[data-loading] { --redact: oklch(0.25 0 0); }
   .bento-hero > p { align-self: flex-start; }
-
-  :is(.bento-hero > p:not(.bento-name), .bento-oculus .workspace-rail-label) {
-    background-image: repeating-linear-gradient(transparent 0 0.22lh, var(--redact) 0.22lh 0.78lh, transparent 0.78lh 1lh);
-  }
-
-  :is(.bento-hero .bento-links a, .bento-oculus :is(.tracking-eye-heading span, .tracking-eye-coordinates > span, .workspace-key kbd, .workspace-key span)) {
-    background-image: linear-gradient(var(--redact), var(--redact));
-  }
-
-  :is(.bento-hero[data-loading] > :not(.bento-name), .bento-hero[data-loading] > :not(.bento-name) *, .bento-oculus[data-loading] *) { color: transparent; }
-
-  /* The eye is an eye-shaped placeholder until it opens. */
-  .bento-oculus .tracking-eye-drawing { border-radius: 50%; background-color: var(--redact); }
-  .bento-oculus .tracking-eye-drawing > * { transition: opacity 480ms ease; }
-  .bento-oculus[data-loading] .tracking-eye-drawing > * { opacity: 0; }
-
-  :is(.bento-hero, .bento-oculus)[data-loading]::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(100deg, transparent 30%, color-mix(in oklch, var(--foreground) 6%, transparent) 50%, transparent 70%) 0 0 / 250% 100%;
-    animation: bento-shimmer 1.5s linear infinite;
-  }
-
-  .bento[data-resolving] :is(.bento-hero, .bento-oculus) { transition: --redact 480ms ease; }
-  .bento[data-resolving] :is(.bento-hero *, .bento-oculus *) { transition: color 480ms ease, opacity 480ms ease; }
 
   /* ── project deck ── */
   .deck { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100%; }
@@ -1585,54 +1501,6 @@
   [data-zoomed] .deck-title { font-size: 28px; }
   [data-zoomed] .deck-description { font-size: 14px; }
 
-  /* ── intro: name + a tiny prompt; "enter" flies both into the grid ── */
-  .bento-stage {
-    position: fixed;
-    inset: 0;
-    z-index: 45;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 22px;
-    padding: 24px;
-    pointer-events: none;
-  }
-
-  /* The name is sized to its text, not the 380px column, so its flight scales to the hero exactly. */
-  .bento-stage-head { width: min(380px, 80vw); }
-
-  .bento-stage-name {
-    width: fit-content;
-    font-size: 34px;
-    font-weight: 700;
-    line-height: 0.92;
-    letter-spacing: -0.02em;
-    animation: bento-stage-in 500ms ease both;
-  }
-
-  .bento-stage-prompt {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: min(380px, 80vw);
-    min-height: 42px;
-    padding: 0 12px;
-    border: 1px solid color-mix(in oklch, var(--brand) 55%, var(--border));
-    border-radius: 6px;
-    background: var(--background);
-    font-size: 12px;
-    animation: bento-stage-in 500ms 120ms ease both;
-  }
-
-  .bento-bar, .bento-grid { transition: opacity 700ms ease; }
-  .bento:is([data-startup="identity"], [data-startup="shell"]) :is(.bento-bar, .bento-grid) { opacity: 0; }
-
-  /* The hero name and terminal prompt stay hidden until their intro twins land on them. */
-  .bento:is([data-startup="identity"], [data-startup="shell"], [data-startup="morphing"]) :is(.bento-name, .cc-prompt) { visibility: hidden; }
-
-  .bento[data-instant="true"] :is(.bento-bar, .bento-grid) { transition: none; }
-
   /* Zoom only exists when the grid fits on one screen. */
   @media (width >= 900px) and (height >= 620px) {
     .bento-tile[data-zoomed],
@@ -1692,10 +1560,6 @@
   .tracking-eye-beam-origin { transform-box: fill-box; transform-origin: center; animation: tracking-eye-ping 1.2s ease-out infinite; }
 }
 
-/* Registered so the redaction bars can fade out instead of switching off. */
-@property --redact { syntax: "<color>"; inherits: true; initial-value: transparent; }
-
-@keyframes bento-shimmer { from { background-position: 150% 0; } to { background-position: -100% 0; } }
 @keyframes deck-in { from { opacity: 0; transform: translateY(8px); } }
 @keyframes deck-progress { to { width: 100%; } }
 @keyframes cc-spin { to { transform: rotate(360deg); } }
@@ -1705,13 +1569,9 @@
 @keyframes tracking-eye-ping { 50% { opacity: 0.35; transform: scale(1.8); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .bento-tile[data-loading] .bento-tile-body::after,
-  :is(.bento-hero, .bento-oculus)[data-loading]::after,
   .deck-detail > *,
   .deck-progress,
   .cc-spin,
-  .bento-stage-name,
-  .bento-stage-prompt,
   .tracking-eye-beam,
   .tracking-eye-panel .tracking-eye-lid,
   .tracking-eye-beam-origin {
@@ -1719,4 +1579,79 @@
   }
 
   .bento-bar, .bento-grid { transition: none; }
+}
+
+/* One deterministic intro renderer owns transforms and opacity until landing. */
+@layer utilities {
+  .bento-reel .bento-grid,
+  .bento-reel .bento-bar { transition: none; }
+  .bento-reel .bento-grid > * { transform-origin: center; }
+  .bento-reel[data-startup="intro"] .bento-grid > *,
+  .bento-reel[data-startup="intro"] .bento-bar,
+  .bento-reel[data-startup="intro"] .bento-message { opacity: 0; }
+  .portfolio-home:has(.bento-reel[data-startup="intro"]) .portfolio-grid-background { opacity: 0; }
+  .bento-reel[data-startup="intro"] .bento-grid { pointer-events: none; }
+  .bento-reel[data-startup="intro"] .bento-grid *,
+  .bento-reel[data-startup="intro"] .bento-grid *::before,
+  .bento-reel[data-startup="intro"] .bento-grid *::after { animation-play-state: paused !important; }
+  body:has(.bento-reel[data-startup="intro"]) .portfolio-global-control { opacity: 0; pointer-events: none; }
+  .bento-reel .bento-editor { position: relative; }
+  .bento-reel .bento-editor-chrome { min-height: 40px; padding-inline: 12px; }
+  .bento-reel .bento-title { font-size: 11px; gap: 5px; }
+  .bento-reel .bento-title-path { font-size: 9px; }
+  .bento-reel .bento-version { font-size: 9px; gap: 4px; }
+  .bento-reel .cc-scroll { padding: 10px 12px 6px; }
+  .bento-reel .cc-scroll { display: flex; flex-direction: column; }
+  .bento-reel .cc-log { flex: 1; gap: 0; font-size: 12px; line-height: 1.5; }
+  .bento-reel .cc-welcome { flex: 0 0 auto; padding: 6px 10px; margin-bottom: 8px; gap: 0; }
+  .bento-reel .cc-tips { margin-top: 0; font-size: 11px; padding-top: 8px; }
+  .bento-reel .cc-tips ol { gap: 0; }
+  .bento-reel .cc-user { margin-bottom: 6px; }
+  .bento-reel .cc-line { position: relative; }
+  .intro-line-flash { position: absolute; inset: 0; color: #f26a21; opacity: 0; pointer-events: none; }
+  .bento-reel .cc-prompt { min-height: 32px; font-size: 11px; }
+  .bento-reel .cc-prompt input { padding-block: 6px; }
+  .bento-reel .cc-spinner { font-size: 12px; margin-top: 4px; min-height: 15px; }
+  .bento-reel[data-startup="ready"] .intro-building { height: 0; min-height: 0; margin: 0; overflow: hidden; visibility: hidden; }
+  .cc-explore { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: space-evenly; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); font-size: inherit; line-height: 1.6; }
+  .bento-reel[data-startup="intro"] .cc-explore { opacity: 0; }
+  .cc-output-group { display: grid; gap: 3px; overflow-wrap: anywhere; }
+  .cc-output-group > p:first-child { color: var(--foreground); }
+  .cc-output-group b { font-weight: 700; }
+  .cc-output-result { padding-left: 16px; color: var(--muted-foreground); }
+  .cc-output-continuation { padding-left: 34px; }
+  .cc-output-result a:hover { color: var(--brand); }
+  .cc-output-result a:focus-visible { outline: 1px solid var(--brand); outline-offset: 3px; }
+  .bento-reel .bento-message { display: block; padding: 6px 12px; min-height: 28px; font-size: 9px; }
+  .intro-stage { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; pointer-events: none; }
+  .intro-card { width: min(330px, calc(100vw - 48px)); transform-origin: 50% 60%; opacity: 0; }
+  .intro-name { margin: 0 0 14px; color: #fff; font-size: 26px; font-weight: 700; line-height: 0.95; letter-spacing: -0.02em; }
+  .intro-name > span { color: #f26a21; }
+  .intro-prompt { position: relative; display: flex; align-items: center; height: 36px; padding: 0 12px; border: 1px solid #f26a21; border-radius: 3px; background: #070707; font-size: 13px; white-space: nowrap; }
+  .intro-chevron { position: relative; z-index: 1; color: #f26a21; margin-right: 7px; }
+  .intro-word { position: relative; z-index: 1; display: inline-block; padding: 0 3px; color: #ebe7e2; transform-origin: 50% 70%; opacity: 0; }
+  .intro-word-ink { position: absolute; inset: 0; padding-inline: 3px; color: #160800; opacity: 0; }
+  .intro-highlight { position: absolute; left: 0; top: 3px; bottom: 3px; width: 1px; border-radius: 2px; background: #f26a21; transform-origin: left center; opacity: 0; }
+  .intro-caret { position: absolute; left: 0; top: 10px; width: 7px; height: 14px; z-index: 2; background: #f26a21; opacity: 0; }
+  .intro-return { position: relative; z-index: 1; margin-left: auto; color: #6d6a66; }
+  .intro-return > span { position: absolute; inset: 0; color: #f26a21; opacity: 0; }
+  .intro-wave { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 39; pointer-events: none; opacity: 0; overflow: hidden; }
+  .intro-wave circle { transform-origin: 0 0; }
+  .bento-reel[data-startup="ready"] :is(.intro-stage, .intro-wave) { display: none; }
+  .intro-replay { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); z-index: 37; display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 3px; background: var(--background); color: var(--muted-foreground); font-size: 10px; cursor: pointer; }
+  .intro-replay:hover { color: var(--foreground); border-color: var(--brand); }
+  .intro-replay:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+  .intro-replay kbd { font: inherit; color: var(--muted-foreground); }
+  .bento-startup-skip[hidden] { display: none; }
+  @media (height < 820px) and (width >= 900px) {
+    .bento-reel .cc-tips { display: none; }
+  }
+  @media (width < 900px), (height < 620px) {
+    .bento-reel .bento-grid { gap: 16px; }
+    .bento-reel .bento-editor { order: -1; min-height: 560px; }
+    .bento-reel [data-intro-tile="activity"] .bento-tile-body { min-height: 180px; }
+    .bento-reel .cc-log { font-size: 12px; }
+    .bento-reel[data-startup="intro"] { overflow: clip; }
+    .intro-replay { bottom: max(12px, env(safe-area-inset-bottom)); }
+  }
 }

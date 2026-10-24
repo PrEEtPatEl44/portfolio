@@ -59,7 +59,7 @@ export function EyeDrawing({ gaze = restingGaze, svgRef, className = "" }: {
   );
 }
 
-export function TrackingEye({ className = "" }: { className?: string }) {
+export function TrackingEye({ className = "", enabled = true }: { className?: string; enabled?: boolean }) {
   const beamId = useId();
   const svgRef = useRef<SVGSVGElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -73,6 +73,7 @@ export function TrackingEye({ className = "" }: { className?: string }) {
   });
 
   useEffect(() => {
+    if (!enabled) return;
     const eye = svgRef.current;
     const panel = panelRef.current;
     if (!eye || !panel) return;
@@ -160,10 +161,10 @@ export function TrackingEye({ className = "" }: { className?: string }) {
       document.documentElement.removeEventListener("pointerleave", reset);
       motion.removeEventListener("change", schedule);
     };
-  }, []);
+  }, [enabled]);
 
-  const tracking = frame.pointer !== null;
-  const gaze = frame.gaze;
+  const tracking = enabled && frame.pointer !== null;
+  const gaze = enabled ? frame.gaze : restingGaze;
   const overlay = tracking && !frame.touch && !frame.reducedMotion;
   const beam = overlay && frame.pointer ? getSightline(frame.origin, frame.pointer, frame.irisRadius) : null;
   const coordinate = (axis: "x" | "y") => tracking ? String(Math.round(frame.pointer![axis])).padStart(4, "0") : "----";

@@ -56,7 +56,7 @@ function useZoomClip(ref: RefObject<HTMLElement | null>, zoomed: boolean) {
   }, [ref, zoomed]);
 }
 
-/** A file in the bento grid: skeleton while the workspace boots, zoomable over the whole grid. */
+/** A file in the bento grid: dealt with real content during startup, zoomable over the whole grid. */
 export function BentoTile({ id, title, filename, type = "MD", action, className = "", children }: {
   id: string;
   title: string;
@@ -80,7 +80,7 @@ export function BentoTile({ id, title, filename, type = "MD", action, className 
       aria-busy={!ready}
       inert={!ready}
       data-area={id}
-      data-loading={!ready || undefined}
+      data-intro-tile={id}
       data-focus={focused === id || undefined}
       data-zoomed={isZoomed || undefined}
       onPointerDown={() => focus(id)}
